@@ -16,7 +16,9 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400..700;1,400..700&family=Manrope:wght@400..800&display=swap">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,400..700;1,400..700&family=Manrope:wght@400..800&display=swap" media="print" onload="this.media='all'">
 <style>
 :root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 [hidden]{display:none!important}
@@ -1715,6 +1717,95 @@ button.info-item:hover .info-ir { border-color: #14110A; background: #14110A; co
 .con-tel { flex: none; display: grid; place-items: center; width: 52px; border: 1px solid rgba(227, 194, 90, .22); border-radius: var(--r-md); color: var(--gold); }
 .con-tel svg { width: 20px; height: 20px; }
 
+/* ---------- ordenadores y tablets grandes: la app aprovecha el ancho ---------- */
+@media (min-width: 900px) {
+  .main-in, body.en-inicio .main-in { max-width: 1240px; margin-inline: auto; }
+  .home > :not(.carousel) { max-width: none; }
+  /* los dos botones principales, uno al lado del otro */
+  .home-ctas { grid-template-columns: repeat(auto-fit, minmax(380px, 400px)); justify-content: center; gap: 12px 16px; }
+  .home-block.con-foto { min-height: 300px; }
+  .con-foto .block-txt { padding: 32px 40px; }
+  /* historia: portada con la foto a la derecha y textos a dos columnas */
+  .his-portada { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; min-height: 340px; }
+  .his-portada img { order: 2; height: 100%; aspect-ratio: auto; -webkit-mask-image: linear-gradient(90deg, transparent, #000 35%); mask-image: linear-gradient(90deg, transparent, #000 35%); }
+  .his-portada-txt { margin-top: 0; padding: 36px 40px; }
+  .his-portada.sin-foto { grid-template-columns: minmax(0, 1fr); }
+  .his-frase { font-size: 2rem; }
+  .his-textos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 40px; }
+  .his-cifras { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .his-cierre { padding: 36px 40px; }
+}
+@media (min-width: 1200px) {
+  /* inicio: Inscripciones, Dónde estamos y Contacto en una fila */
+  .home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-grid > :last-child:nth-child(odd) { grid-column: auto; }
+  .home-grid > :only-child { grid-column: 1 / -1; }
+  /* ropa: cuatro prendas por fila */
+  .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  /* horarios: tres días por fila */
+  .dias { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1600px) {
+  .main-in, body.en-inicio .main-in { max-width: 1400px; }
+}
+@media (min-width: 900px) { .home-ctas.his-ctas { grid-template-columns: minmax(0, 420px); } }
+
+/* reservas: las semanas se colocan en 1, 2 o 3 columnas según el ancho que haya (móvil, tablet, ordenador) */
+.slots-wrap { container-type: inline-size; }
+@container (min-width: 700px) {
+  .slots-area { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 24px 20px; }
+  .slots-area > :not(.week) { grid-column: 1 / -1; }
+}
+@container (min-width: 1080px) { .slots-area { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ---------- licencias federativas (Temporada): competitiva en oro, recreativa en negro ---------- */
+.lic {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(227, 194, 90, .24);
+  border-radius: var(--r-lg);
+  background: var(--fondo-negro);
+}
+.lic-head { display: flex; align-items: center; gap: 12px; }
+.lic-ico { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--fondo-oro); color: #14110A; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
+.lic-ico svg { width: 22px; height: 22px; }
+.lic-kicker { color: var(--muted); font-family: var(--display); font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.lic .h2 { color: var(--gold); font-size: 1.3125rem; line-height: 1.2; }
+.lic-grupos { display: grid; gap: 10px; }
+@media (min-width: 560px) { .lic-grupos { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); } }
+.lic-grupo {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 16px 16px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(227, 194, 90, .3);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, .03);
+}
+.lic-grupo.oro { border-color: rgba(255, 238, 180, .55); background: var(--fondo-oro); color: #14110A; box-shadow: 0 14px 34px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .4); }
+/* el ala del logo, muy suave, como marca de agua */
+.lic-grupo::after { content: ""; position: absolute; right: -26px; bottom: -30px; width: 120px; height: 120px; border-radius: 50%; border: 18px solid currentColor; opacity: .05; pointer-events: none; }
+.lic-mod { display: flex; align-items: center; gap: 8px; padding-bottom: 6px; font-family: var(--display); font-size: .8125rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.lic-grupo.oro .lic-mod { color: #14110A; }
+.lic-mod span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--gold-soft); color: var(--gold); }
+.lic-grupo.oro .lic-mod span { background: #14110A; color: var(--gold); }
+.lic-mod svg { width: 15px; height: 15px; }
+.lic-grupo li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.lic-grupo li + li { border-top: 1px solid rgba(244, 241, 234, .1); }
+.lic-grupo.oro li + li { border-top-color: rgba(20, 17, 10, .16); }
+.lic-amb { display: grid; gap: 4px; min-width: 0; }
+.lic-amb b { font-family: var(--display); font-size: 1.0625rem; font-weight: 600; line-height: 1.2; }
+.lic-amb small { justify-self: start; padding: 2px 8px; border: 1px solid rgba(227, 194, 90, .4); border-radius: var(--pill); color: var(--gold); font-size: .6875rem; font-weight: 800; letter-spacing: .08em; }
+.lic-grupo.oro .lic-amb small { border-color: rgba(20, 17, 10, .35); color: #14110A; }
+.lic-precio { flex: none; font-family: var(--display); font-size: 1.875rem; font-weight: 600; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.lic-precio i { margin-left: 3px; font-size: .55em; font-style: normal; font-weight: 600; opacity: .75; }
+.lic-nota { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: rgba(227, 194, 90, .07); color: var(--muted); font-size: var(--fs-xs); line-height: 1.55; }
+.lic-nota svg { width: 18px; height: 18px; margin-top: 1px; color: var(--gold); }
+.lic-nota b { color: var(--ink); }
+
 </style>
 </head>
 <body>
@@ -1775,7 +1866,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '63b7a4c2c280';   // la pone build.py en cada versión
+const VERSION_APP = '199423d34198';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -1973,9 +2064,13 @@ const EJEMPLO = {
     }
   },
   temporada: [
-    { tipo: 'dato', titulo: 'Inicio de entrenamientos', texto: '8 de septiembre de 2026' },
-    { tipo: 'dato', titulo: 'Fin de temporada', texto: '26 de junio de 2027' },
-    { tipo: 'dato', titulo: 'Licencia federativa', texto: '45 € al año' },
+    { tipo: 'dato', titulo: 'Inicio de temporada', texto: '1 de septiembre de 2026' },
+    { tipo: 'dato', titulo: 'Fin de temporada', texto: '31 de julio de 2027' },
+    { tipo: 'licencia', titulo: 'Fit Kid competitiva nacional', texto: 'FEBD · 40 €' },
+    { tipo: 'licencia', titulo: 'Fit Kid competitiva autonómica', texto: 'FBECV · 55 €' },
+    { tipo: 'licencia', titulo: 'Fit Kid recreativa nacional', texto: 'FEBD · 10 €' },
+    { tipo: 'licencia', titulo: 'Fit Kid recreativa autonómica', texto: 'FBECV · 25 €' },
+    { tipo: 'licencia', titulo: 'Importante', texto: 'Estos importes corresponden a las últimas tarifas oficiales consultadas (2023 para FEBD y 2024 para FBECV). No están confirmados para la temporada 2026/2027.' },
     { tipo: 'equipacion', titulo: 'Equipación Competición Victoria', texto: 'Todas las prendas del equipo de competición, en el negro y oro del club. Toca una para ver sus fotos y tallas.' },
     { tipo: 'info', titulo: 'Entrenamientos', texto: 'Cada grupo tiene sus días y horas. Consulta los tuyos en Horarios.' },
     { tipo: 'info', titulo: 'Clases particulares', texto: 'Sesiones de 60 minutos con los dos entrenadores del club, de lunes a sábado. Se reservan desde la app.' },
@@ -2595,7 +2690,7 @@ function vReservas() {
       <div class="months" role="group" aria-label="Mes">${chips}</div>
       <p class="legend"><span class="slot slot-mini" aria-hidden="true">17:00</span> Libre <span class="slot slot-mini taken" aria-hidden="true">17:00</span> Ocupada</p>
     </section>
-    <section id="slots-area" class="slots-area" aria-live="polite">${cuerpoSlots()}</section>
+    <div class="slots-wrap"><section id="slots-area" class="slots-area" aria-live="polite">${cuerpoSlots()}</section></div>
   </div>`;
 }
 function cuerpoSlots() {
@@ -2936,13 +3031,14 @@ function vTemporada() {
   const datos = de('dato');
   const curso = cursoDe(datos);      // inicio y fin de la temporada: van juntos en la tarjeta de oro
   const resto = curso ? datos.filter(x => x !== curso.ini && x !== curso.fin) : datos;
-  const equip = de('equipacion')[0], infos = de('info'), insta = de('instagram')[0];
-  const secciones = items.filter(x => !['aviso', 'dato', 'equipacion', 'info', 'instagram'].includes(x.tipo));
+  const equip = de('equipacion')[0], infos = de('info'), insta = de('instagram')[0], lics = de('licencia');
+  const secciones = items.filter(x => !['aviso', 'dato', 'equipacion', 'info', 'instagram', 'licencia'].includes(x.tipo));
   const titulo = a.temporada ? `Temporada ${esc(a.temporada)}` : 'Temporada';
   return `<div class="view">${cabecera(titulo)}
     ${de('aviso').map(x => `<aside class="notice">${ICON.info}<div><p class="notice-title">${esc(x.titulo)}</p><p>${linkify(x.texto)}</p></div></aside>`).join('')}
     ${curso ? tarjetaCurso(curso) : ''}
     ${resto.length ? `<ul class="facts">${resto.map(x => `<li class="fact"><span class="fact-ico">${iconoDe(x.titulo, ICONO_DATO, 'star')}</span><span class="fact-et">${esc(x.titulo)}</span><span class="fact-val">${linkify(x.texto).replace(/ €/g, '\u00a0€')}</span></li>`).join('')}</ul>` : ''}
+    ${lics.length ? tarjetaLicencias(lics) : ''}
     ${equip ? tarjetaEquipacion(equip) : ''}
     ${infos.length ? tarjetaInfo(infos) : ''}
     ${secciones.length ? `<div class="prose">${secciones.map(x => `<section><h2 class="h2">${esc(x.titulo)}</h2><p>${linkify(x.texto)}</p></section>`).join('')}</div>` : ''}
@@ -3002,8 +3098,8 @@ function tarjetaCurso(c) {
     <svg class="curso-marca" viewBox="0 0 1000 516" aria-hidden="true"><use href="#logo-alas"/></svg>
     <p class="curso-estado ${clase}">${estado}</p>
     <div class="curso-fechas">
-      <p><span>${ICON.cal}Inicio</span><b>${A.d} ${mes3(A.m)}</b><small>${A.y}</small></p>
-      <p class="fin"><span>Fin${ICON.flag}</span><b>${B.d} ${mes3(B.m)}</b><small>${B.y}</small></p>
+      <p><span>${ICON.cal}Inicio temporada</span><b>${A.d} ${mes3(A.m)}</b><small>${A.y}</small></p>
+      <p class="fin"><span>Fin temporada${ICON.flag}</span><b>${B.d} ${mes3(B.m)}</b><small>${B.y}</small></p>
     </div>
     <div class="curso-barra" role="progressbar" aria-label="Avance de la temporada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><i style="width: ${pct}%"></i><span style="left: ${pct}%"></span></div>
     <p class="curso-nota">${nota}</p>
@@ -3035,6 +3131,38 @@ function tarjetaInfo(items) {
       const dentro = `<span class="info-i">${iconoDe([x.titulo, x.texto], ICONO_INFO, 'info')}</span><span class="info-txt"><b>${esc(x.titulo)}</b>${x.texto ? `<span>${linkify(x.texto)}</span>` : ''}</span>`;
       return `<li>${ruta && !/https?:\/\//.test(x.texto) ? `<button class="info-item" type="button" data-act="ir" data-ruta="${ruta}">${dentro}<span class="info-ir">${ICON.fwd}</span></button>` : `<div class="info-item">${dentro}</div>`}</li>`;
     }).join('')}</ul>
+  </section>`;
+}
+
+/* Licencias federativas: una fila por licencia («Fit Kid competitiva nacional» · «FEBD · 40 €»).
+   Se agrupan por modalidad (competitiva / recreativa) y la fila sin precio sale como nota al pie. */
+function licenciasDe(items) {
+  const grupos = [], notas = [];
+  items.forEach(x => {
+    const t = `${x.titulo} ${x.texto}`;
+    const precio = (x.texto.match(/(\d+(?:[.,]\d{1,2})?)\s*€/) || [])[1];
+    if (!precio) { notas.push(x); return; }
+    const mod = /competi/i.test(t) ? 'Competitiva' : /recrea/i.test(t) ? 'Recreativa' : 'Licencias';
+    const fed = (x.texto.match(/\b[A-ZÁÉÍÓÚÑ]{3,}\b/) || [])[0] || '';
+    let ambito = x.titulo.replace(/fit\s*kid/i, '').replace(/competitiv[ao]s?|recreativ[ao]s?/i, '').replace(/\s+/g, ' ').trim();
+    ambito = ambito ? ambito.charAt(0).toUpperCase() + ambito.slice(1) : x.titulo;
+    let g = grupos.find(y => y.mod === mod);
+    if (!g) { g = { mod, filas: [] }; grupos.push(g); }
+    g.filas.push({ ambito, fed, precio: precio.replace('.', ',') });
+  });
+  return { grupos, notas };
+}
+function tarjetaLicencias(items) {
+  const { grupos, notas } = licenciasDe(items);
+  if (!grupos.length && !notas.length) return '';
+  const ico = m => m === 'Competitiva' ? ICON.trophy : m === 'Recreativa' ? ICON.star : ICON.carnet;
+  return `<section class="lic" aria-labelledby="lic-t">
+    <div class="lic-head"><span class="lic-ico">${ICON.carnet}</span><div><p class="lic-kicker">Coste anual por deportista</p><h2 class="h2" id="lic-t">Licencias federativas</h2></div></div>
+    ${grupos.length ? `<div class="lic-grupos">${grupos.map((g, i) => `<div class="lic-grupo${i % 2 ? '' : ' oro'}">
+      <p class="lic-mod"><span>${ico(g.mod)}</span>${esc(g.mod)}</p>
+      <ul>${g.filas.map(f => `<li><span class="lic-amb"><b>${esc(f.ambito)}</b>${f.fed ? `<small>${esc(f.fed)}</small>` : ''}</span><span class="lic-precio">${esc(f.precio)}<i>€</i></span></li>`).join('')}</ul>
+    </div>`).join('')}</div>` : ''}
+    ${notas.map(n => `<p class="lic-nota">${ICON.info}<span>${n.titulo ? `<b>${esc(n.titulo)}.</b> ` : ''}${linkify(n.texto)}</span></p>`).join('')}
   </section>`;
 }
 
