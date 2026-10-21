@@ -1,0 +1,3 @@
+Librerías para exportar a PDF desde el panel del club (se cargan solo al pulsar "Exportar > PDF"):
+- jsPDF 4.2.1 (licencia MIT) · https://github.com/parallax/jsPDF
+- jsPDF-AutoTable 5.0.8 (licencia MIT) · https://github.com/simonbengtsson/jsPDF-AutoTable
