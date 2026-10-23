@@ -448,7 +448,9 @@ input[type="search"].input { -webkit-appearance: none; }
 .motto-3 { color: var(--muted); font-size: var(--fs-xs); font-weight: 500; text-wrap: balance; }
 /* los dos botones principales (reservar clase y pedir ropa), debajo de Nuestra historia */
 .home-ctas { display: grid; gap: 10px; }
-.home-ctas .btn-cta:nth-child(2)::after { animation-delay: 3.25s; }   /* el destello pasa por uno y luego por el otro */
+.home-ctas .btn-cta:nth-child(2)::after { animation-delay: 2.5s; }   /* el destello pasa por uno, luego por el siguiente… */
+.home-ctas .btn-cta:nth-child(3)::after { animation-delay: 4s; }
+.home-ctas .cta-ins { grid-column: 1 / -1; }   /* inscribirse: encima de los otros dos, a lo ancho */
 @media (min-width: 520px) { .home-ctas { grid-template-columns: minmax(0, 420px); justify-content: center; } .home-ctas .btn-cta { min-width: 0; } }
 /* botón principal de la portada: oro metálico, halo y un destello que lo cruza cada pocos segundos */
 .btn-cta {
@@ -1973,7 +1975,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '948435796129';   // la pone build.py en cada versión
+const VERSION_APP = 'eec2c8e7ef9f';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -3015,8 +3017,9 @@ function montarCarrusel() {
   track.addEventListener('pointercancel', soltar);
 }
 function vInicio() {
-  // los dos botones principales, iguales: reservar clase y pedir ropa
+  // los botones principales, iguales: inscribirse (arriba, a lo ancho), reservar clase y pedir ropa
   const acciones = `<div class="home-ctas">
+      <button class="btn btn-primary btn-cta cta-ins" type="button" data-act="ir" data-ruta="inscripcion">${ICON.userPlus}<span>Inscríbete en el club</span>${ICON.arrow}</button>
       <button class="btn btn-primary btn-cta" type="button" data-act="ir" data-ruta="reservas">${ICON.cal}<span>Reservar clase particular</span>${ICON.arrow}</button>
       <button class="btn btn-primary btn-cta" type="button" data-act="ir" data-ruta="ropa">${ICON.shirt}<span>Pedir ropa del club</span>${ICON.arrow}</button></div>`;
   const portada = extra => `<header class="hero"><h1 class="hero-logo">${logo('logo', CONFIG.CLUB)}</h1>${extra}</header>`;
