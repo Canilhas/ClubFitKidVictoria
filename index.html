@@ -1945,7 +1945,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '8fba74812c38';   // la pone build.py en cada versión
+const VERSION_APP = '1e61d47ca160';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -2032,6 +2032,7 @@ const EJEMPLO = {
     duracion: 60,
     mesesVisibles: 6,
     reservasDesde: '2026-11-01',
+    diasSemanaSinClases: [5, 6],   // viernes y sábado: sin clases particulares
     diasSinClases: ['2026-12-08', '2026-12-25', '2027-01-01', '2027-01-06'],
     pedidosAbiertos: true,
     fechaLimitePedidos: '2026-11-15',
@@ -2161,7 +2162,7 @@ const EJEMPLO = {
     { tipo: 'licencia', titulo: 'Importante', texto: 'Estos importes corresponden a las últimas tarifas oficiales consultadas (2023 para FEBD y 2024 para FBECV). No están confirmados para la temporada 2026/2027.' },
     { tipo: 'equipacion', titulo: 'Equipación Competición Victoria', texto: 'Todas las prendas del equipo de competición, en el negro y oro del club. Toca una para ver sus fotos y tallas.' },
     { tipo: 'info', titulo: 'Entrenamientos', texto: 'Cada grupo tiene sus días y horas. Consulta los tuyos en Horarios.' },
-    { tipo: 'info', titulo: 'Clases particulares', texto: 'Sesiones de 60 minutos con los dos entrenadores del club, de lunes a sábado. Se reservan desde la app.' },
+    { tipo: 'info', titulo: 'Clases particulares', texto: 'Sesiones de 60 minutos con los dos entrenadores del club, de lunes a jueves. Se reservan desde la app.' },
     { tipo: 'info', titulo: 'Ropa y pagos', texto: 'La ropa del club se pide desde la app y se paga por Bizum o en efectivo.' },
     { tipo: 'info', titulo: 'Competiciones', texto: 'Fechas, sedes y cuenta atrás de cada campeonato, en Competiciones.' },
     { tipo: 'info', titulo: 'Club federado', texto: 'Reconocido por la FEBD (Federación Española de Baile Deportivo).' },
@@ -2210,7 +2211,7 @@ const Demo = (() => {
   const hoy = () => ymd(new Date());
   const marca = (d = new Date()) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const ajustes = () => Object.assign({}, EJEMPLO.ajustes, { fechaLimitePedidos: sumaDias(hoy(), 27), pedidosAbiertos: true });
-  const horasDelDia = f => diaSemana(f) === 0 ? [] : horasAleatorias(f, diaSemana(f) === 6 ? POOL_SABADO : POOL_SEMANA, 3, 'club');
+  const horasDelDia = f => diaSemana(f) === 0 || (EJEMPLO.ajustes.diasSemanaSinClases || []).includes(diaSemana(f)) ? [] : horasAleatorias(f, diaSemana(f) === 6 ? POOL_SABADO : POOL_SEMANA, 3, 'club');
   const prod = id => EJEMPLO.productos.find(p => p.id === id);
   function lineas(items) {
     return items.map(([id, talla, cantidad]) => { const p = prod(id); return { id, nombre: p.nombre, talla, cantidad, precio: p.precio }; });
@@ -2223,7 +2224,7 @@ const Demo = (() => {
     const reservas = [];
     for (let i = 1, k = 0; i <= 26 && reservas.length < 7; i++) {
       const f = sumaDias(hoy(), i);
-      if (diaSemana(f) === 0 || EJEMPLO.ajustes.diasSinClases.includes(f)) continue;
+      if (!horasDelDia(f).length || EJEMPLO.ajustes.diasSinClases.includes(f)) continue;
       if (i % 3 !== 1 && i % 7 !== 5) continue;
       const h = horasDelDia(f)[i % 3];
       reservas.push({ id: 'R-' + pad4(reservas.length + 1), creada: marca(new Date(Date.now() - (30 - i) * 36e5)), fecha: f, hora: h, nombre: nombres[k], telefono: tels[k], email: '', comentario: notas[k], estado: 'Confirmada', tipo: tipos[k] });
@@ -2266,7 +2267,7 @@ const Demo = (() => {
     const dias = [];
     for (let d = 1; d <= n; d++) {
       const f = `${mes}-${pad(d)}`;
-      if (f < h || f < (a.reservasDesde || '') || diaSemana(f) === 0) continue;
+      if (f < h || f < (a.reservasDesde || '') || !horasDelDia(f).length) continue;
       if (a.diasSinClases.includes(f)) { dias.push({ fecha: f, cerrado: true, horas: [] }); continue; }
       dias.push({ fecha: f, cerrado: false, horas: horasDelDia(f).map(x => ({ hora: x, estado: oc[f + '|' + x] ? 'ocupado' : (`${f} ${x}` <= lim ? 'pasado' : 'libre') })) });
     }
