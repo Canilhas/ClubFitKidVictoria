@@ -1980,6 +1980,10 @@ button.info-item:hover .info-ir { border-color: #14110A; background: #14110A; co
 .d-nac .d-nac-anio, .d-nac:has(input[value="anio"]:checked) .d-nac-fecha { display: none; }
 .d-nac:has(input[value="anio"]:checked) .d-nac-anio { display: block; }
 .d-nac input[type="date"].input { color-scheme: dark; }
+/* «Actualizando…»: el icono gira mientras llegan los datos */
+.girando svg { animation: gira 1s linear infinite; }
+@keyframes gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .girando svg { animation: none; } }
 
 </style>
 </head>
@@ -2037,11 +2041,13 @@ const CONFIG = {
   // WhatsApp público del club, con prefijo y sin espacios (p. ej. '34600111222').
   // Si lo rellenas, tras reservar o pedir aparece un botón para escribir al club.
   WHATSAPP_CLUB: '34610630018',
+  // Secciones escondidas (no salen en el menú ni se pueden abrir). Para volver a mostrar «Nuestra historia», deja la lista vacía: []
+  OCULTAS: ['historia'],
 };
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '9ee375972c32';   // la pone build.py en cada versión
+const VERSION_APP = '7ec22cde72e0';   // la pone build.py en cada versión
 /* Lista real de deportistas: solo la recibe la vista previa privada al compilar (nunca la versión pública de GitHub) */
 const DEPORTISTAS_CLUB = null;
 const DEMO = !CONFIG.API_URL;
@@ -2415,8 +2421,10 @@ const Demo = (() => {
   async function admin(op, x) {
     const base = cargar();
     if (x.password !== PASS) return espera({ ok: false, code: 'auth', error: 'Contraseña incorrecta.' }, 400);
-    if (op === 'login') return espera({ ok: true, data: {} });
-    if (op === 'listar') return espera({ ok: true, data: { reservas: base.reservas, pedidos: base.pedidos, hojaUrl: '' } });
+    if (op === 'login' || op === 'listar') {
+      if (!base.deportistas || base.depOrigen !== ORIGEN_DEP) { base.deportistas = sembrarDeportistas(); base.depOrigen = ORIGEN_DEP; guardar(); }
+      return espera({ ok: true, data: { reservas: base.reservas, pedidos: base.pedidos, deportistas: base.deportistas, hojaUrl: '' } });
+    }
     if (op === 'cancelarReserva') {
       const r = base.reservas.find(z => z.id === x.id);
       if (!r) return espera({ ok: false, error: 'No encuentro esa reserva.' });
@@ -2510,7 +2518,7 @@ const S = {
   dep: { lista: null, cargando: false, error: '', q: '', nivel: 'todos', anio: 'todos', orden: 'edad', editar: null, borrar: false },
   admin: { pass: null, tab: 'reservas', data: null, cargando: false, error: '', filtroR: 'proximas', filtroT: 'todas', filtroPago: 'todos', filtroP: 'todos', q: '', confirmar: null },
 };
-const RUTAS = ['inicio', 'historia', 'inscripcion', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'];
+const RUTAS = ['inicio', 'historia', 'inscripcion', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'].filter(r => !(CONFIG.OCULTAS || []).includes(r));
 const ESTADOS_PEDIDO = ['Pendiente', 'Pagado', 'Entregado', 'Cancelado'];
 const ajustes = () => (S.init && S.init.ajustes) || {};
 const hoyRef = () => (S.init && S.init.hoy) || ymd(new Date());
@@ -2695,7 +2703,7 @@ function renderNav() {
   const enAdmin = S.route === 'admin' && !!S.admin.pass;
   const items = enAdmin
     ? [['reservas', 'Reservas', ICON.cal], ['pedidos', 'Pedidos', ICON.bag], ['deportistas', 'Deportistas', ICON.users], ['ajustes', 'Ajustes', ICON.sliders]]
-    : [['inicio', 'Inicio', ICON.home], ['historia', 'Nuestra historia', ICON.libro], ['inscripcion', 'Inscripciones', ICON.userPlus], ['reservas', 'Clases particulares', ICON.cal], ['ropa', 'Ropa del club', ICON.shirt], ['horarios', 'Horarios', ICON.clock], ['temporada', 'Temporada', ICON.flag], ['calendario', 'Competiciones', ICON.trophy]];
+    : [['inicio', 'Inicio', ICON.home], ['historia', 'Nuestra historia', ICON.libro], ['inscripcion', 'Inscripciones', ICON.userPlus], ['reservas', 'Clases particulares', ICON.cal], ['ropa', 'Ropa del club', ICON.shirt], ['horarios', 'Horarios', ICON.clock], ['temporada', 'Temporada', ICON.flag], ['calendario', 'Competiciones', ICON.trophy]].filter(([k]) => RUTAS.includes(k));
   el.tabs.innerHTML = (enAdmin ? '<p class="nav-mode">Panel del club</p>' : '') + items.map(([k, label, icon]) => {
     const cur = enAdmin ? S.admin.tab === k : S.route === k;
     const attrs = cur ? ' aria-current="page"' : '';
@@ -3134,7 +3142,7 @@ function vInicio() {
   const historia = his.texto || his.foto ? `<section class="home-block${his.foto ? ' con-foto' : ''}" aria-labelledby="h-his">
       ${his.foto ? `<figure class="block-foto"><img src="${esc(his.foto)}" alt="" loading="lazy"></figure>` : ''}
       <div class="block-txt"><h2 class="h2" id="h-his">${esc(his.titulo || 'Nuestra historia')}</h2>${his.texto ? `<p>${textoInicio(his.texto)}</p>` : ''}
-        <button class="link-mas" type="button" data-act="ir" data-ruta="historia"><span>Conocer nuestra historia</span>${ICON.arrow}</button></div></section>` : '';
+        ${RUTAS.includes('historia') ? `<button class="link-mas" type="button" data-act="ir" data-ruta="historia"><span>Conocer nuestra historia</span>${ICON.arrow}</button>` : ''}</div></section>` : '';
   const bloques = [];
   if (ins.texto) {
     const wa = `<button class="btn btn-primary btn-sm" type="button" data-act="ir" data-ruta="inscripcion">${ICON.userPlus}<span>Primera visita</span></button>`;
@@ -3829,17 +3837,28 @@ const botonCartel = (e, cls) => `<button class="${cls}" type="button" data-act="
 /* =================================================================
    PANEL DEL CLUB (ADMIN)
    ================================================================= */
+/* Los datos del panel: se enseñan al momento los últimos que se cargaron (en esta sesión)
+   y se actualizan por detrás. Una sola llamada trae reservas, pedidos y deportistas. */
+function ponerDatosAdmin(d) {
+  S.admin.data = { reservas: d.reservas || [], pedidos: d.pedidos || [], hojaUrl: d.hojaUrl || '' };
+  if (Array.isArray(d.deportistas)) { S.dep.lista = d.deportistas; S.dep.error = ''; }
+  S.admin.fresco = true;
+  try { sess.set('club-admin-datos', JSON.stringify(d)); } catch (e) { /* sin almacenamiento */ }
+}
 async function cargarAdmin() {
+  if (S.admin.cargando) return;
   S.admin.cargando = true; S.admin.error = '';
+  if (S.route === 'admin' && S.admin.data) renderView();      // el botón pasa a «Actualizando…»
   const r = await API.admin('listar');
   S.admin.cargando = false;
-  if (r.ok) { S.admin.data = r.data; }
+  if (r.ok) ponerDatosAdmin(r.data);
   else if (r.code === 'auth') { salirAdmin(r.error); return; }
-  else S.admin.error = r.error || 'No se han podido cargar los datos.';
+  else if (!S.admin.data) S.admin.error = r.error || 'No se han podido cargar los datos.';
+  else toast(r.error || 'No se ha podido actualizar. Se muestran los últimos datos.');
   if (S.route === 'admin') render();
 }
 function salirAdmin(msg) {
-  S.admin.pass = null; S.admin.data = null; S.admin.confirmar = null; S.dep.lista = null; sess.del('club-admin');
+  S.admin.pass = null; S.admin.data = null; S.admin.confirmar = null; S.admin.fresco = false; S.dep.lista = null; sess.del('club-admin'); sess.del('club-admin-datos');
   render();
   if (msg) toast(msg);
 }
@@ -3849,6 +3868,7 @@ function vAdmin() {
   if (S.admin.tab === 'deportistas') return vAdminDeportistas();
   if (S.admin.error && !S.admin.data) return `<div class="view">${cabecera(titulos[S.admin.tab])}${errorBox(S.admin.error, 'admin-refrescar')}</div>`;
   if (!S.admin.data) { if (!S.admin.cargando) cargarAdmin(); return `<div class="view">${cabecera(titulos[S.admin.tab])}${filasCarga(4)}</div>`; }
+  if (!S.admin.fresco && !S.admin.cargando) setTimeout(cargarAdmin, 0);   // datos guardados de antes: se ven ya y se actualizan por detrás
   if (S.admin.tab === 'pedidos') return vAdminPedidos();
   if (S.admin.tab === 'ajustes') return vAdminAjustes();
   return vAdminReservas();
@@ -3872,7 +3892,9 @@ async function login(form) {
   ocupado(btn, false);
   if (!r.ok) { e.textContent = r.error || 'No se ha podido entrar.'; e.hidden = false; form.elements.pass.select(); return; }
   S.admin.pass = pw; sess.set('club-admin', pw);
-  S.admin.data = null; S.admin.tab = 'reservas';
+  S.admin.tab = 'reservas';
+  if (r.data && Array.isArray(r.data.reservas)) ponerDatosAdmin(r.data);   // la entrada ya trae los datos: sin esperar otra llamada
+  else S.admin.data = null;
   render();
 }
 const filtroTexto = (r, q) => !q || `${r.nombre} ${r.telefono} ${r.email || ''} ${r.id}`.toLowerCase().includes(q.toLowerCase());
@@ -3888,8 +3910,9 @@ function gruposReservas(reservas) {
     todas: reservas.slice().sort((a, b) => k(a) < k(b) ? -1 : 1),
   };
 }
-const botonesCabecera = `<div class="head-acciones"><button class="btn btn-ghost btn-sm" type="button" data-act="exportar">${ICON.install}<span>Exportar</span></button>
-      <button class="btn btn-ghost btn-sm" type="button" data-act="admin-refrescar">${ICON.refresh}<span>Actualizar</span></button></div>`;
+const botonRefrescar = act => `<button class="btn btn-ghost btn-sm${S.admin.cargando ? ' girando' : ''}" type="button" data-act="${act}"${S.admin.cargando ? ' disabled' : ''}>${ICON.refresh}<span>${S.admin.cargando ? 'Actualizando…' : 'Actualizar'}</span></button>`;
+const botonesCabecera_ = () => `<div class="head-acciones"><button class="btn btn-ghost btn-sm" type="button" data-act="exportar">${ICON.install}<span>Exportar</span></button>
+      ${botonRefrescar('admin-refrescar')}</div>`;
 function vAdminReservas() {
   const d = S.admin.data;
   const G = gruposReservas(d.reservas);
@@ -3905,7 +3928,7 @@ function vAdminReservas() {
   const sinPagar = d.reservas.filter(r => r.estado !== 'Cancelada' && pagoDe(r) === 'Pendiente').length;
   return `<div class="view">
     <header class="head head-row"><div><h1 class="h1">Reservas</h1><p class="lead">${estaSemana ? `${estaSemana} ${estaSemana === 1 ? 'clase' : 'clases'} en los próximos 7 días.` : 'Sin clases en los próximos 7 días.'}${sinPagar ? ` ${sinPagar} ${sinPagar === 1 ? 'reserva pendiente' : 'reservas pendientes'} de pago.` : ''}</p></div>
-      ${botonesCabecera}</header>
+      ${botonesCabecera_()}</header>
     <div class="toolbar"><div class="seg" role="group" aria-label="Filtrar reservas">${seg}</div>
       <div class="seg seg-tipo" role="group" aria-label="Clase suelta o bono">${segT}</div>
       <div class="seg seg-pago" role="group" aria-label="Pago">${segP}</div>
@@ -3992,7 +4015,7 @@ function vAdminPedidos() {
   }).join('');
   return `<div class="view">
     <header class="head head-row"><div><h1 class="h1">Pedidos</h1><p class="lead">${vivos.length} ${vivos.length === 1 ? 'pedido' : 'pedidos'}, ${euros(importe)} en total. Pendiente de cobro: ${euros(pendiente)}.</p></div>
-      ${botonesCabecera}</header>
+      ${botonesCabecera_()}</header>
     ${filas ? `<section class="summary" aria-labelledby="sum-h"><h2 class="h2" id="sum-h">Resumen para el proveedor</h2><p class="meta">Unidades por prenda y talla, sin contar pedidos cancelados.</p><ul class="sum-list">${filas}</ul></section>` : ''}
     <div class="toolbar"><div class="seg" role="group" aria-label="Filtrar pedidos">${seg}</div></div>
     <div class="orders">${cards || '<div class="empty"><p>No hay pedidos en esta lista.</p></div>'}</div>
@@ -4085,7 +4108,7 @@ function vAdminDeportistas() {
     <header class="head head-row"><div><h1 class="h1">Deportistas</h1><p class="lead">${L.length} ${L.length === 1 ? 'deportista' : 'deportistas'} · ${niveles.length} ${niveles.length === 1 ? 'nivel' : 'niveles'}. Toca a alguien para editarlo.</p></div>
       <div class="head-acciones"><button class="btn btn-primary btn-sm" type="button" data-act="dep-nuevo">${ICON.userPlus}<span>Añadir</span></button>
         <button class="btn btn-ghost btn-sm" type="button" data-act="dep-exportar">${ICON.install}<span>Exportar</span></button>
-        <button class="btn btn-ghost btn-sm" type="button" data-act="dep-refrescar">${ICON.refresh}<span>Actualizar</span></button></div></header>
+        ${botonRefrescar('dep-refrescar')}</div></header>
     <div class="toolbar dep-toolbar">
       <div class="seg dep-seg" role="group" aria-label="Filtrar por nivel">${seg}</div>
       <div class="dep-filtros">
@@ -4720,7 +4743,7 @@ const ACT = {
   },
   'admin-tab': t => { S.admin.tab = t.dataset.tab; S.admin.confirmar = null; cerrarMenu(); render(); window.scrollTo(0, 0); },
   'admin-salir': () => { cerrarMenu(); salirAdmin('Sesión cerrada.'); },
-  'admin-refrescar': () => { S.admin.data = null; S.admin.error = ''; render(); },
+  'admin-refrescar': () => { S.admin.error = ''; cargarAdmin(); },
   'filtro-t': t => { S.admin.filtroT = t.dataset.f; renderView(); },
   'filtro-r': t => { S.admin.filtroR = t.dataset.f; S.admin.confirmar = null; renderView(); },
   'filtro-p': t => { S.admin.filtroP = t.dataset.f; renderView(); },
@@ -4747,7 +4770,7 @@ const ACT = {
     if (!r.ok) { r0.pago = antes; renderView(); if (r.code === 'auth') return salirAdmin(r.error); return toast(r.error || 'No se ha podido guardar el pago.'); }
     toast(pago === 'Pagado' ? `${id}: pagada.` : `${id}: pendiente de pago.`);
   },
-  'dep-refrescar': () => { S.dep.lista = null; S.dep.error = ''; renderView(); },
+  'dep-refrescar': () => { S.dep.error = ''; if (S.admin.data) cargarAdmin(); else { S.dep.lista = null; renderView(); } },
   'dep-nivel': t => { S.dep.nivel = t.dataset.f; if (S.dep.nivel === 'todos') S.dep.orden = 'edad'; renderView(); },
   'dep-nuevo': () => { sheet.open(formDeportista(null)); },
   'dep-editar': t => { const x = (S.dep.lista || []).find(z => z.id === t.dataset.id); if (x) sheet.open(formDeportista(x)); },
@@ -4872,6 +4895,7 @@ async function cargarInit() {
 function arrancar() {
   cacheEls();
   S.admin.pass = sess.get('club-admin');
+  if (S.admin.pass) { try { const d = JSON.parse(sess.get('club-admin-datos') || 'null'); if (d && Array.isArray(d.reservas)) { ponerDatosAdmin(d); S.admin.fresco = false; } } catch (e) { /* nada */ } }
   S.carrito = store.get('club-carrito', []) || [];
   if (!DEMO) { const c = store.get('club-init', null); if (c && c.ajustes) S.init = c; }
   let h = '';
