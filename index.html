@@ -1926,6 +1926,49 @@ button.info-item:hover .info-ir { border-color: #14110A; background: #14110A; co
 .inc-n { min-width: 0; font-size: var(--fs-sm); font-weight: 700; line-height: 1.25; }
 .inc-n .marca { color: var(--gold); }
 
+/* ---------- panel · deportistas ---------- */
+.dep-toolbar { display: grid; gap: 10px; }
+.dep-seg { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.dep-seg::-webkit-scrollbar { display: none; }
+.dep-seg button { white-space: nowrap; }
+.dep-filtros { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@media (min-width: 640px) { .dep-filtros { grid-template-columns: minmax(0, 1fr) auto auto; } }
+.dep-filtros .select { width: 100%; }
+.dep-cuenta { margin-top: -12px; }
+.dep-lista { display: grid; gap: 8px; }
+.dep-lista .group-h { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.dep-lista .group-h .count { padding: 1px 8px; border-radius: var(--pill); background: var(--gold-soft); color: var(--gold); font-size: var(--fs-xs); }
+@media (min-width: 900px) { .dep-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .dep-lista .group-h { grid-column: 1 / -1; } }
+.dep {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-areas: "av main ed" "av nivel ed";
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.dep:hover { border-color: rgba(227, 194, 90, .55); }
+.dep:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.dep-av { grid-area: av; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--fondo-oro); color: #14110A; font-family: var(--display); font-size: .875rem; font-weight: 700; }
+.dep-main { grid-area: main; display: grid; gap: 2px; min-width: 0; }
+.dep-n { overflow: hidden; font-size: var(--fs-sm); line-height: 1.3; text-overflow: ellipsis; }
+.dep-meta { overflow: hidden; color: var(--muted); font-size: var(--fs-xs); text-overflow: ellipsis; white-space: nowrap; }
+.dep-meta b { color: var(--ink); }
+.dep-nivel { grid-area: nivel; justify-self: start; margin-top: 4px; padding: 2px 10px; border: 1px solid rgba(227, 194, 90, .4); border-radius: var(--pill); color: var(--gold); font-size: .6875rem; font-weight: 800; letter-spacing: .02em; }
+.dep-ed { grid-area: ed; display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); }
+.dep-ed svg { width: 16px; height: 16px; }
+.dep:hover .dep-ed { border-color: var(--gold); color: var(--gold); }
+.dep-borrar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
 </style>
 </head>
 <body>
@@ -1986,7 +2029,9 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = 'acc6f80cd542';   // la pone build.py en cada versión
+const VERSION_APP = 'c090979ba423';   // la pone build.py en cada versión
+/* Lista real de deportistas: solo la recibe la vista previa privada al compilar (nunca la versión pública de GitHub) */
+const DEPORTISTAS_CLUB = null;
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -2257,6 +2302,15 @@ const Demo = (() => {
   function lineas(items) {
     return items.map(([id, talla, cantidad]) => { const p = prod(id); return { id, nombre: p.nombre, talla, cantidad, precio: p.precio }; });
   }
+  // deportistas: en la vista previa privada, la lista real del club; si no, nombres inventados
+  const ORIGEN_DEP = DEPORTISTAS_CLUB ? 'club-' + DEPORTISTAS_CLUB.length : 'ejemplo';
+  function sembrarDeportistas() {
+    if (DEPORTISTAS_CLUB) return DEPORTISTAS_CLUB.map(x => Object.assign({}, x));
+    const N = [['Carla Méndez Ruiz', '2016', 'Class I'], ['Noa Ferrer Sanz', '2015', 'Class I'], ['Lucía Gómez Prat', '2014', 'Class I'], ['Alba Rius Serra', '2012', 'Class I'], ['Irene Soler Vidal', '2010', 'Class I'], ['Marta Pons Gil', '2007 o menos', 'Class I'],
+      ['Vega Martí Roca', '2017', 'Class II A'], ['Sofía Navarro Ibáñez', '2011', 'Class II A'], ['Julia Torres Mas', '2009', 'Class II A'], ['Elsa Romero Puig', '2017', 'Class II B'], ['Nora Castell Bosch', '2008', 'Class II B'],
+      ['Aitana Llorens Gil', '2015', 'Class III A (Base A)'], ['Lola Vidal Pérez', '2017', 'Class III B (Base B)'], ['Ona Ribas Colom', '2013', 'Class III B (Base B)']];
+    return N.map(([nombre, anio, nivel], i) => ({ id: 'D-' + pad4(i + 1), nombre, anio, nivel, notas: '', alta: '01/09/2026' }));
+  }
   function sembrar() {
     const nombres = ['Lucía Ferrer', 'Martina Gil', 'Paula Navarro', 'Carla Ibáñez', 'Noa Martínez', 'Abril Soler', 'Vega Romero'];
     const tels = ['612 345 678', '633 210 457', '655 908 112', '677 431 290', '690 772 045', '622 456 789', '644 118 503'];
@@ -2362,6 +2416,20 @@ const Demo = (() => {
       return espera({ ok: true, data: { id: p.id, estado: p.estado } });
     }
     if (op === 'probarAvisos') return espera({ ok: true, data: { resultados: [['WhatsApp Administrador 1'], ['WhatsApp Administrador 2'], ['Email del club']].map(([canal]) => ({ canal, ok: true, detalle: 'Simulado: en la demo no se envía nada.' })) } }, 500);
+    if (op === 'deportistas') { if (!base.deportistas || base.depOrigen !== ORIGEN_DEP) { base.deportistas = sembrarDeportistas(); base.depOrigen = ORIGEN_DEP; guardar(); } return espera({ ok: true, data: { deportistas: base.deportistas } }); }
+    if (op === 'guardarDeportista') {
+      const L = base.deportistas || (base.deportistas = sembrarDeportistas());
+      const limpia = x0 => Object.assign({}, x0, { nombre: String(x0.nombre || '').trim(), anio: String(x0.anio || '').trim().replace(/ o antes$/i, ' o menos'), nivel: String(x0.nivel || '').trim(), notas: String(x0.notas || '').trim() });
+      const dep = limpia(x.deportista || {});
+      const k = s => sinTildes(s.toLowerCase()).replace(/[^a-z0-9]/g, '');
+      const rep = L.find(z => k(z.nombre) === k(dep.nombre) && z.id !== dep.id);
+      if (rep) return espera({ ok: false, error: `Ya hay un deportista con ese nombre (${rep.id}).` });
+      if (dep.id) { const i = L.findIndex(z => z.id === dep.id); if (i < 0) return espera({ ok: false, error: 'No encuentro ese deportista.' }); L[i] = Object.assign({}, L[i], dep); guardar(); return espera({ ok: true, data: L[i] }, 300); }
+      const nuevo = Object.assign(dep, { id: 'D-' + pad4(L.reduce((m, z) => Math.max(m, Number(z.id.slice(2)) || 0), 0) + 1), alta: marca().slice(0, 10) });
+      L.push(nuevo); guardar();
+      return espera({ ok: true, data: nuevo }, 300);
+    }
+    if (op === 'borrarDeportista') { base.deportistas = (base.deportistas || []).filter(z => z.id !== x.id); guardar(); return espera({ ok: true, data: { id: x.id } }, 300); }
     if (op === 'reiniciar') { db = sembrar(); guardar(); return espera({ ok: true, data: {} }); }
     return espera({ ok: false, error: 'Operación desconocida.' });
   }
@@ -2419,6 +2487,7 @@ const S = {
   horGrupo: null,
   fichaBorrador: null,
   ficha: null,          // ficha de primera visita ya enviada (pantalla de gracias)
+  dep: { lista: null, cargando: false, error: '', q: '', nivel: 'todos', anio: 'todos', orden: 'nivel', editar: null, borrar: false },
   admin: { pass: null, tab: 'reservas', data: null, cargando: false, error: '', filtroR: 'proximas', filtroT: 'todas', filtroP: 'todos', q: '', confirmar: null },
 };
 const RUTAS = ['inicio', 'historia', 'inscripcion', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'];
@@ -2458,6 +2527,7 @@ const ICON = {
   banco: ic('<path d="M3.5 9.5 12 5l8.5 4.5M5.5 10.5v6.5M10 10.5v6.5M14 10.5v6.5M18.5 10.5v6.5M3.5 19.5h17"/>'),
   userPlus: ic('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.5 6.5-5.5 1.6 0 3 .5 4.1 1.4M18 13.5v6M15 16.5h6"/>'),
   firma: ic('<path d="M3 17.5c2.2 0 3.3-6 5.2-6 1.6 0 .4 5 2.1 5 1.4 0 1.9-3.2 3.3-3.2 1.1 0 1.2 2.3 2.4 2.3.9 0 1.5-.8 2-1.6M3 21h18"/>'),
+  edit: ic('<path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3zM14.5 7.5l2 2"/>'),
   user: ic('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>'),
   users: ic('<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19.5c.6-3.1 2.8-4.8 5.5-4.8s4.9 1.7 5.5 4.8"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M15.6 14.8c2.6-.2 4.5 1.3 5 4.2"/>'),
   tag: ic('<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.3"/>'),
@@ -2604,7 +2674,7 @@ function renderNav() {
   if (capa && capa.dataset.src !== fondo) { capa.dataset.src = fondo; capa.style.backgroundImage = fondo ? `url("${fondo}")` : ''; capa.hidden = !fondo; }
   const enAdmin = S.route === 'admin' && !!S.admin.pass;
   const items = enAdmin
-    ? [['reservas', 'Reservas', ICON.cal], ['pedidos', 'Pedidos', ICON.bag], ['ajustes', 'Ajustes', ICON.sliders]]
+    ? [['reservas', 'Reservas', ICON.cal], ['pedidos', 'Pedidos', ICON.bag], ['deportistas', 'Deportistas', ICON.users], ['ajustes', 'Ajustes', ICON.sliders]]
     : [['inicio', 'Inicio', ICON.home], ['historia', 'Nuestra historia', ICON.libro], ['inscripcion', 'Inscripciones', ICON.userPlus], ['reservas', 'Clases particulares', ICON.cal], ['ropa', 'Ropa del club', ICON.shirt], ['horarios', 'Horarios', ICON.clock], ['temporada', 'Temporada', ICON.flag], ['calendario', 'Competiciones', ICON.trophy]];
   el.tabs.innerHTML = (enAdmin ? '<p class="nav-mode">Panel del club</p>' : '') + items.map(([k, label, icon]) => {
     const cur = enAdmin ? S.admin.tab === k : S.route === k;
@@ -3749,13 +3819,14 @@ async function cargarAdmin() {
   if (S.route === 'admin') render();
 }
 function salirAdmin(msg) {
-  S.admin.pass = null; S.admin.data = null; S.admin.confirmar = null; sess.del('club-admin');
+  S.admin.pass = null; S.admin.data = null; S.admin.confirmar = null; S.dep.lista = null; sess.del('club-admin');
   render();
   if (msg) toast(msg);
 }
 function vAdmin() {
   if (!S.admin.pass) return vLogin();
-  const titulos = { reservas: 'Reservas', pedidos: 'Pedidos', ajustes: 'Ajustes' };
+  const titulos = { reservas: 'Reservas', pedidos: 'Pedidos', deportistas: 'Deportistas', ajustes: 'Ajustes' };
+  if (S.admin.tab === 'deportistas') return vAdminDeportistas();
   if (S.admin.error && !S.admin.data) return `<div class="view">${cabecera(titulos[S.admin.tab])}${errorBox(S.admin.error, 'admin-refrescar')}</div>`;
   if (!S.admin.data) { if (!S.admin.cargando) cargarAdmin(); return `<div class="view">${cabecera(titulos[S.admin.tab])}${filasCarga(4)}</div>`; }
   if (S.admin.tab === 'pedidos') return vAdminPedidos();
@@ -3914,6 +3985,165 @@ function vAdminAjustes() {
       <div class="actions"><button class="btn btn-ghost" type="button" data-act="admin-salir">${ICON.logout}<span>Cerrar sesión</span></button>
       ${DEMO ? '<button class="btn btn-ghost" type="button" data-act="reiniciar-demo">Reiniciar datos de la demo</button>' : ''}</div></section>
   </div>`;
+}
+
+
+/* =================================================================
+   PANEL · DEPORTISTAS (base de datos del club, solo con contraseña)
+   ================================================================= */
+const anioActual = () => Number(hoyRef().slice(0, 4));
+const anioDe = x => Number(String(x.anio || '').slice(0, 4)) || 0;
+const omenos = x => /o menos/i.test(x.anio || '');
+const edadTxt = x => { const a = anioDe(x); if (!a) return ''; const e = anioActual() - a; return omenos(x) ? `${e} o más` : `${e}`; };
+const anioTxt = x => (omenos(x) ? `${anioDe(x)} o antes` : String(anioDe(x) || x.anio || ''));
+const nivelesDe = lista => [...new Set(lista.map(x => x.nivel).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+const iniciales = n => String(n).split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+async function cargarDeportistas() {
+  S.dep.cargando = true; S.dep.error = '';
+  const r = await API.admin('deportistas');
+  S.dep.cargando = false;
+  if (r.ok) S.dep.lista = r.data.deportistas || [];
+  else if (r.code === 'auth') return salirAdmin(r.error);
+  else S.dep.error = r.error || 'No se ha podido cargar la lista de deportistas.';
+  if (S.route === 'admin' && S.admin.tab === 'deportistas') renderView();
+}
+/* La lista con los filtros aplicados (nivel, año y búsqueda) y en el orden elegido */
+function deportistasFiltrados() {
+  const D = S.dep, q = sinTildes(D.q.trim().toLowerCase());
+  const l = (D.lista || []).filter(x => (D.nivel === 'todos' || x.nivel === D.nivel) && (D.anio === 'todos' || String(anioDe(x)) === D.anio) && (!q || sinTildes(`${x.nombre} ${x.notas}`.toLowerCase()).includes(q)));
+  const nombre = (a, b) => a.nombre.localeCompare(b.nombre, 'es');
+  if (D.orden === 'edad') return l.sort((a, b) => anioDe(a) - anioDe(b) || nombre(a, b));          // de mayor a menor
+  if (D.orden === 'edad-asc') return l.sort((a, b) => anioDe(b) - anioDe(a) || nombre(a, b));
+  if (D.orden === 'nombre') return l.sort(nombre);
+  return l.sort((a, b) => a.nivel.localeCompare(b.nivel, 'es', { numeric: true }) || anioDe(a) - anioDe(b) || nombre(a, b));
+}
+function filasDeportistas() {
+  const l = deportistasFiltrados();
+  if (!l.length) return `<div class="empty"><p>${(S.dep.lista || []).length ? 'Nadie coincide con estos filtros.' : 'Todavía no hay deportistas. Añade el primero con el botón «Añadir».'}</p></div>`;
+  let out = '', grupo = null;
+  l.forEach(x => {
+    if (S.dep.orden === 'nivel' && x.nivel !== grupo) { grupo = x.nivel; out += `<h2 class="group-h">${esc(grupo || 'Sin nivel')} <span class="count">${l.filter(y => y.nivel === grupo).length}</span></h2>`; }
+    out += `<button class="dep" type="button" data-act="dep-editar" data-id="${esc(x.id)}">
+      <span class="dep-av" aria-hidden="true">${esc(iniciales(x.nombre))}</span>
+      <span class="dep-main"><b class="dep-n">${esc(x.nombre)}</b><span class="dep-meta">${esc(anioTxt(x))}${edadTxt(x) ? ` · <b>${esc(edadTxt(x))} años</b>` : ''}${x.notas ? ` · ${esc(x.notas)}` : ''}</span></span>
+      <span class="dep-nivel">${esc(x.nivel)}</span>
+      <span class="dep-ed" aria-hidden="true">${ICON.edit}</span></button>`;
+  });
+  return out;
+}
+function vAdminDeportistas() {
+  const D = S.dep;
+  if (!D.lista) {
+    if (D.error) return `<div class="view">${cabecera('Deportistas')}${errorBox(D.error, 'dep-refrescar')}</div>`;
+    if (!D.cargando) cargarDeportistas();
+    return `<div class="view">${cabecera('Deportistas')}${filasCarga(5)}</div>`;
+  }
+  const L = D.lista, niveles = nivelesDe(L);
+  if (D.nivel !== 'todos' && !niveles.includes(D.nivel)) D.nivel = 'todos';
+  const anios = [...new Set(L.map(anioDe).filter(Boolean))].sort((a, b) => a - b);
+  const seg = [['todos', 'Todos', L.length]].concat(niveles.map(n => [n, n, L.filter(x => x.nivel === n).length]))
+    .map(([id, t, c]) => `<button type="button" data-act="dep-nivel" data-f="${esc(id)}" aria-pressed="${D.nivel === id}">${esc(t)}<span class="count">${c}</span></button>`).join('');
+  return `<div class="view dep-view">
+    <header class="head head-row"><div><h1 class="h1">Deportistas</h1><p class="lead">${L.length} ${L.length === 1 ? 'deportista' : 'deportistas'} · ${niveles.length} ${niveles.length === 1 ? 'nivel' : 'niveles'}. Toca a alguien para editarlo.</p></div>
+      <div class="head-acciones"><button class="btn btn-primary btn-sm" type="button" data-act="dep-nuevo">${ICON.userPlus}<span>Añadir</span></button>
+        <button class="btn btn-ghost btn-sm" type="button" data-act="dep-exportar">${ICON.install}<span>Exportar</span></button>
+        <button class="btn btn-ghost btn-sm" type="button" data-act="dep-refrescar">${ICON.refresh}<span>Actualizar</span></button></div></header>
+    <div class="toolbar dep-toolbar">
+      <div class="seg dep-seg" role="group" aria-label="Filtrar por nivel">${seg}</div>
+      <div class="dep-filtros">
+        <label class="sr-only" for="dep-q">Buscar</label><input class="input input-sm" id="dep-q" type="search" placeholder="Buscar por nombre" value="${esc(D.q)}">
+        <label class="sr-only" for="dep-anio">Año de nacimiento</label>
+        <select class="input input-sm select" id="dep-anio" data-change="dep-anio"><option value="todos">Todas las edades</option>${anios.map(a => `<option value="${a}"${D.anio === String(a) ? ' selected' : ''}>${a} · ${anioActual() - a} años</option>`).join('')}</select>
+        <label class="sr-only" for="dep-orden">Ordenar</label>
+        <select class="input input-sm select" id="dep-orden" data-change="dep-orden">${[['nivel', 'Por nivel'], ['nombre', 'Por nombre (A-Z)'], ['edad', 'Mayores primero'], ['edad-asc', 'Pequeñas primero']].map(([v, t]) => `<option value="${v}"${D.orden === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      </div>
+    </div>
+    <p class="meta dep-cuenta" id="dep-cuenta">${deportistasFiltrados().length} en la lista</p>
+    <div class="dep-lista" id="dep-lista">${filasDeportistas()}</div>
+  </div>`;
+}
+function pintarListaDep() {
+  const box = $('#dep-lista'); if (box) box.innerHTML = filasDeportistas();
+  const c = $('#dep-cuenta'); if (c) c.textContent = `${deportistasFiltrados().length} en la lista`;
+}
+function formDeportista(x) {
+  const niveles = nivelesDe(S.dep.lista || []);
+  const nuevo = !x;
+  x = x || { id: '', nombre: '', anio: '', nivel: S.dep.nivel !== 'todos' ? S.dep.nivel : '', notas: '' };
+  const otro = x.nivel && !niveles.includes(x.nivel);
+  return `<div class="sheet-head"><h2 class="h2" id="sheet-title" tabindex="-1">${nuevo ? 'Añadir deportista' : 'Editar deportista'}</h2>${btnCerrar}</div>
+    <form class="form" id="f-dep" novalidate data-id="${esc(x.id)}">
+      <div class="field"><label for="d-nombre">Nombre y apellidos</label><input class="input" id="d-nombre" name="nombre" maxlength="90" autocomplete="off" required value="${esc(x.nombre)}"></div>
+      <div class="field"><label for="d-anio">Año de nacimiento</label>
+        <input class="input" id="d-anio" name="anio" inputmode="numeric" maxlength="20" placeholder="Ej. 2014" required value="${esc(omenos(x) ? `${anioDe(x)} o menos` : (x.anio || ''))}">
+        <span class="hint" id="d-edad">${anioDe(x) ? `${edadTxt(x)} años este año.` : 'La edad se calcula sola, y se actualiza cada año.'} Si no lo sabéis exacto, podéis poner «2007 o menos».</span></div>
+      <div class="field"><label for="d-nivel">Nivel</label>
+        <select class="input select d-sel" id="d-nivel" name="nivelSel" data-change="dep-nivel-sel">${niveles.map(n => `<option${n === x.nivel ? ' selected' : ''}>${esc(n)}</option>`).join('')}<option value="__otro"${otro || !niveles.length ? ' selected' : ''}>Otro nivel…</option></select>
+        <input class="input" id="d-nivel-otro" name="nivelOtro" maxlength="40" placeholder="Escribe el nivel" value="${otro ? esc(x.nivel) : ''}"${otro || !niveles.length ? '' : ' hidden'}></div>
+      <div class="field"><label for="d-notas">Notas <span class="opt">(opcional, solo las ve el club)</span></label><textarea class="input" id="d-notas" name="notas" maxlength="300">${esc(x.notas || '')}</textarea></div>
+      <p class="err" id="d-err" role="alert" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit">${nuevo ? 'Añadir a la lista' : 'Guardar cambios'}</button>
+      ${nuevo ? '' : `<div class="dep-borrar" id="dep-borrar"><button class="btn btn-ghost btn-sm btn-quiet-danger" type="button" data-act="dep-borrar-pedir">Eliminar de la lista</button></div>
+        <p class="meta small">${esc(x.id)}${x.alta ? `, en la lista desde el ${esc(x.alta)}` : ''}</p>`}
+    </form>`;
+}
+async function guardarDeportistaForm(f) {
+  const v = n => String((f.elements[n] || {}).value || '').trim();
+  const sel = v('nivelSel');
+  const dep = { id: f.dataset.id || '', nombre: v('nombre').replace(/\s+/g, ' '), anio: v('anio').replace(/\s+/g, ' '), nivel: sel === '__otro' ? v('nivelOtro') : sel, notas: v('notas') };
+  const err = $('#d-err', f);
+  const mal = (m, campo) => { err.textContent = m; err.hidden = false; if (campo && f.elements[campo]) f.elements[campo].focus(); };
+  if (dep.nombre.length < 3) return mal('Escribe el nombre y los apellidos.', 'nombre');
+  if (!/^(19|20)\d{2}( o (menos|antes))?$/i.test(dep.anio) || Number(dep.anio.slice(0, 4)) > anioActual()) return mal('Escribe el año de nacimiento con 4 cifras (ej. 2014).', 'anio');
+  if (!dep.nivel) return mal('Elige o escribe el nivel.', sel === '__otro' ? 'nivelOtro' : 'nivelSel');
+  const btn = f.querySelector('[type="submit"]');
+  ocupado(btn, true, 'Guardando…');
+  const r = await API.admin('guardarDeportista', { deportista: dep });
+  ocupado(btn, false);
+  if (!r.ok) { if (r.code === 'auth') { sheet.close(); return salirAdmin(r.error); } return mal(r.error || 'No se ha podido guardar.'); }
+  const L = S.dep.lista || (S.dep.lista = []);
+  const i = L.findIndex(x => x.id === r.data.id);
+  if (i >= 0) L[i] = r.data; else L.push(r.data);
+  sheet.close();
+  renderView();
+  toast(dep.id ? 'Cambios guardados.' : `${r.data.nombre} añadida a la lista.`);
+}
+function hojaExportarDep() {
+  libPDF().catch(() => {}); logoPNG();
+  const n = deportistasFiltrados().length, D = S.dep;
+  const filtros = [D.nivel !== 'todos' ? D.nivel : '', D.anio !== 'todos' ? `nacidas en ${D.anio}` : '', D.q.trim() ? `«${D.q.trim()}»` : ''].filter(Boolean).join(' · ');
+  return `<div class="sheet-head"><h2 class="h2" id="sheet-title" tabindex="-1">Exportar deportistas</h2>${btnCerrar}</div>
+    <div class="form exp" id="f-exportar-dep">
+      <p>Se exporta la lista tal como la ves: <b>${n} ${n === 1 ? 'deportista' : 'deportistas'}</b>${filtros ? ` (${esc(filtros)})` : ''}, en el mismo orden.</p>
+      <div class="exp-formatos">
+        <button class="exp-btn" type="button" data-act="dep-exportar-a" data-formato="xlsx"><span class="exp-ico">${ICON.sheet}</span><span class="exp-txt"><b>Excel</b><small>Para ordenar, filtrar y sumar</small></span></button>
+        <button class="exp-btn" type="button" data-act="dep-exportar-a" data-formato="pdf"><span class="exp-ico">${ICON.doc}</span><span class="exp-txt"><b>PDF</b><small>Para imprimir o enviar</small></span></button>
+      </div>
+      <p class="err" id="exp-err" role="alert" hidden></p></div>`;
+}
+async function exportarDeportistas(formato) {
+  const l = deportistasFiltrados();
+  if (!l.length) throw new Error('No hay deportistas en la lista.');
+  const D = S.dep, ahora = new Date();
+  const filtros = [D.nivel !== 'todos' ? D.nivel : 'Todos los niveles', D.anio !== 'todos' ? `nacidas en ${D.anio}` : '', D.q.trim() ? `«${D.q.trim()}»` : ''].filter(Boolean).join(' · ');
+  const sub = `${filtros} · ${l.length} ${l.length === 1 ? 'deportista' : 'deportistas'} · exportado el ${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()}`;
+  const archivo = `deportistas-${sinTildes(D.nivel !== 'todos' ? D.nivel : 'todos').replace(/[^\w-]+/g, '-').replace(/-+/g, '-').toLowerCase()}-${ymd(ahora)}.${formato}`;
+  let datos;
+  if (formato === 'pdf') {
+    const P = await pdfNuevo('Deportistas', sub);
+    P.tabla({
+      head: [['Nombre y apellidos', 'Año de nacimiento', 'Edad', 'Nivel', 'Notas']],
+      body: l.map(x => [x.nombre, anioTxt(x), edadTxt(x) ? `${edadTxt(x)} años` : '', x.nivel, x.notas || '']),
+      columnStyles: { 0: { cellWidth: 80, fontStyle: 'bold' }, 1: { cellWidth: 34 }, 2: { cellWidth: 24 }, 3: { cellWidth: 50 }, 4: { cellWidth: 'auto' } },
+    });
+    datos = P.fin();
+  } else {
+    datos = Excel.libro([{ nombre: 'Deportistas', titulo: `Deportistas · ${CONFIG.CLUB}`, subtitulo: sub,
+      columnas: [{ titulo: 'Nombre y apellidos', ancho: 34 }, { titulo: 'Año de nacimiento', ancho: 16 }, { titulo: 'Edad', ancho: 9 }, { titulo: 'Nivel', ancho: 24 }, { titulo: 'Notas', ancho: 36, tipo: 'largo' }, { titulo: 'ID', ancho: 9 }],
+      filas: l.map(x => [x.nombre, anioTxt(x), edadTxt(x), x.nivel, x.notas || '', x.id]) }], 'Deportistas');
+  }
+  const r = await guardarArchivo(archivo, datos, formato === 'pdf' ? 'application/pdf' : MIME_XLSX);
+  return { r, archivo };
 }
 
 /* =================================================================
@@ -4462,6 +4692,31 @@ const ACT = {
     toast('Reserva cancelada. Avisa a la familia por WhatsApp si hace falta.', 5000);
   },
   'exportar': () => sheet.open(hojaExportar()),
+  'dep-refrescar': () => { S.dep.lista = null; S.dep.error = ''; renderView(); },
+  'dep-nivel': t => { S.dep.nivel = t.dataset.f; renderView(); },
+  'dep-nuevo': () => { sheet.open(formDeportista(null)); },
+  'dep-editar': t => { const x = (S.dep.lista || []).find(z => z.id === t.dataset.id); if (x) sheet.open(formDeportista(x)); },
+  'dep-borrar-pedir': () => { const b = $('#dep-borrar'); if (b) b.innerHTML = `<span class="confirm-q">¿Eliminar a esta deportista de la lista?</span><button class="btn btn-danger btn-sm" type="button" data-act="dep-borrar-si">Sí, eliminar</button><button class="btn btn-ghost btn-sm" type="button" data-act="dep-borrar-no">No</button>`; },
+  'dep-borrar-no': () => { const b = $('#dep-borrar'); if (b) b.innerHTML = '<button class="btn btn-ghost btn-sm btn-quiet-danger" type="button" data-act="dep-borrar-pedir">Eliminar de la lista</button>'; },
+  'dep-borrar-si': async t => {
+    const f = $('#f-dep'); if (!f) return;
+    t.disabled = true;
+    const r = await API.admin('borrarDeportista', { id: f.dataset.id });
+    if (!r.ok) { t.disabled = false; if (r.code === 'auth') { sheet.close(); return salirAdmin(r.error); } const e = $('#d-err', f); e.textContent = r.error || 'No se ha podido eliminar.'; e.hidden = false; return; }
+    S.dep.lista = (S.dep.lista || []).filter(x => x.id !== f.dataset.id);
+    sheet.close(); renderView(); toast('Eliminada de la lista.');
+  },
+  'dep-exportar': () => sheet.open(hojaExportarDep()),
+  'dep-exportar-a': async t => {
+    const box = $('#f-exportar-dep'); if (!box) return;
+    const err = $('#exp-err', box), botones = [...box.querySelectorAll('.exp-btn')];
+    err.hidden = true; botones.forEach(b => { b.disabled = true; }); t.classList.add('cargando');
+    try {
+      const { r, archivo } = await exportarDeportistas(t.dataset.formato);
+      if (r === 'ok') { sheet.close(); toast(`Listo: ${archivo}`); }
+    } catch (e) { err.textContent = (e && e.message) || 'No se ha podido exportar.'; err.hidden = false; }
+    finally { botones.forEach(b => { b.disabled = false; }); t.classList.remove('cargando'); }
+  },
   'exportar-a': async t => {
     const f = $('#f-exportar'); if (!f) return;
     const err = $('#exp-err');
@@ -4507,10 +4762,14 @@ function onSubmit(e) {
   else if (f.id === 'f-pedido') enviarPedido(f);
   else if (f.id === 'f-login') login(f);
   else if (f.id === 'f-ins') enviarFicha(f);
+  else if (f.id === 'f-dep') guardarDeportistaForm(f);
 }
 async function onChange(e) {
   const t = e.target;
   if (t.closest && t.closest('#f-ins')) { cambioFicha(t); return; }
+  if (t.dataset.change === 'dep-anio') { S.dep.anio = t.value; pintarListaDep(); return; }
+  if (t.dataset.change === 'dep-orden') { S.dep.orden = t.value; pintarListaDep(); return; }
+  if (t.dataset.change === 'dep-nivel-sel') { const o = $('#d-nivel-otro'); if (o) { o.hidden = t.value !== '__otro'; if (!o.hidden) o.focus(); } return; }
   if (t.dataset.change === 'estado') {
     const id = t.dataset.id, estado = t.value;
     t.disabled = true;
@@ -4523,6 +4782,8 @@ async function onChange(e) {
   }
 }
 function onInput(e) {
+  if (e.target.id === 'dep-q') { S.dep.q = e.target.value; pintarListaDep(); return; }
+  if (e.target.id === 'd-anio') { const h = $('#d-edad'); const a = Number(String(e.target.value).slice(0, 4)); if (h && a > 1900 && a <= anioActual()) h.textContent = `${anioActual() - a}${/o (menos|antes)/i.test(e.target.value) ? ' o más' : ''} años este año.`; return; }
   if (e.target.id === 'a-q') {
     S.admin.q = e.target.value;
     const box = $('#admin-list');
