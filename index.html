@@ -1969,6 +1969,18 @@ button.info-item:hover .info-ir { border-color: #14110A; background: #14110A; co
 .dep:hover .dep-ed { border-color: var(--gold); color: var(--gold); }
 .dep-borrar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
+/* ---------- panel · reservas: pagado / pendiente ---------- */
+.pago-sel { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: var(--pill); background: var(--surface-2); }
+.pago-op { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 12px; border: 0; border-radius: var(--pill); background: transparent; color: var(--muted); font: inherit; font-size: var(--fs-xs); font-weight: 700; cursor: pointer; }
+.pago-op svg { width: 14px; height: 14px; }
+.pago-op.no[aria-pressed="true"] { background: rgba(233, 179, 94, .16); color: var(--warn); }
+.pago-op.si[aria-pressed="true"] { background: var(--fondo-oro); color: #14110A; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
+.pago-op:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* deportistas: fecha completa o solo el año */
+.d-nac .d-nac-anio, .d-nac:has(input[value="anio"]:checked) .d-nac-fecha { display: none; }
+.d-nac:has(input[value="anio"]:checked) .d-nac-anio { display: block; }
+.d-nac input[type="date"].input { color-scheme: dark; }
+
 </style>
 </head>
 <body>
@@ -2029,7 +2041,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = 'a3b2eed9d5f2';   // la pone build.py en cada versión
+const VERSION_APP = '9ee375972c32';   // la pone build.py en cada versión
 /* Lista real de deportistas: solo la recibe la vista previa privada al compilar (nunca la versión pública de GitHub) */
 const DEPORTISTAS_CLUB = null;
 const DEMO = !CONFIG.API_URL;
@@ -2297,7 +2309,9 @@ const Demo = (() => {
   const hoy = () => ymd(new Date());
   const marca = (d = new Date()) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const ajustes = () => Object.assign({}, EJEMPLO.ajustes, { fechaLimitePedidos: sumaDias(hoy(), 27), pedidosAbiertos: true });
-  const horasDelDia = f => diaSemana(f) === 0 || (EJEMPLO.ajustes.diasSemanaSinClases || []).includes(diaSemana(f)) ? [] : horasAleatorias(f, diaSemana(f) === 6 ? POOL_SABADO : POOL_SEMANA, 3, 'club');
+  // horas de las clases particulares (como la pestaña Horarios de la hoja): lunes a jueves
+  const HORARIOS_DEMO = { 1: ['15:00', '16:00'], 2: ['15:00', '16:00'], 3: ['15:00', '16:00', '20:00'], 4: ['15:00', '16:00'] };
+  const horasDelDia = f => ((EJEMPLO.ajustes.diasSemanaSinClases || []).includes(diaSemana(f)) ? [] : (HORARIOS_DEMO[diaSemana(f)] || []).slice());
   const prod = id => EJEMPLO.productos.find(p => p.id === id);
   function lineas(items) {
     return items.map(([id, talla, cantidad]) => { const p = prod(id); return { id, nombre: p.nombre, talla, cantidad, precio: p.precio }; });
@@ -2322,7 +2336,7 @@ const Demo = (() => {
       if (!horasDelDia(f).length || EJEMPLO.ajustes.diasSinClases.includes(f)) continue;
       if (i % 3 !== 1 && i % 7 !== 5) continue;
       const h = horasDelDia(f)[i % 3];
-      reservas.push({ id: 'R-' + pad4(reservas.length + 1), creada: marca(new Date(Date.now() - (30 - i) * 36e5)), fecha: f, hora: h, nombre: nombres[k], telefono: tels[k], email: '', comentario: notas[k], estado: 'Confirmada', tipo: tipos[k] });
+      reservas.push({ id: 'R-' + pad4(reservas.length + 1), creada: marca(new Date(Date.now() - (30 - i) * 36e5)), fecha: f, hora: h, nombre: nombres[k], telefono: tels[k], email: '', comentario: notas[k], estado: 'Confirmada', tipo: tipos[k], pago: k % 3 === 0 ? 'Pagado' : 'Pendiente' });
       k++;
     }
     if (reservas[4]) reservas[4].estado = 'Cancelada';
@@ -2409,6 +2423,12 @@ const Demo = (() => {
       r.estado = 'Cancelada'; guardar();
       return espera({ ok: true, data: { id: r.id, estado: r.estado } });
     }
+    if (op === 'pagoReserva') {
+      const r = base.reservas.find(z => z.id === x.id);
+      if (!r) return espera({ ok: false, error: 'No encuentro esa reserva.' });
+      r.pago = x.pago === 'Pagado' ? 'Pagado' : 'Pendiente'; guardar();
+      return espera({ ok: true, data: { id: r.id, pago: r.pago } }, 250);
+    }
     if (op === 'estadoPedido') {
       const p = base.pedidos.find(z => z.id === x.id);
       if (!p) return espera({ ok: false, error: 'No encuentro ese pedido.' });
@@ -2419,7 +2439,7 @@ const Demo = (() => {
     if (op === 'deportistas') { if (!base.deportistas || base.depOrigen !== ORIGEN_DEP) { base.deportistas = sembrarDeportistas(); base.depOrigen = ORIGEN_DEP; guardar(); } return espera({ ok: true, data: { deportistas: base.deportistas } }); }
     if (op === 'guardarDeportista') {
       const L = base.deportistas || (base.deportistas = sembrarDeportistas());
-      const limpia = x0 => Object.assign({}, x0, { nombre: String(x0.nombre || '').trim(), anio: String(x0.anio || '').trim().replace(/ o antes$/i, ' o menos'), nivel: String(x0.nivel || '').trim(), notas: String(x0.notas || '').trim() });
+      const limpia = x0 => Object.assign({}, x0, { nombre: String(x0.nombre || '').trim(), anio: String(x0.anio || '').trim().replace(/ o antes$/i, ' o menos').toLowerCase(), nivel: String(x0.nivel || '').trim(), notas: String(x0.notas || '').trim() });
       const dep = limpia(x.deportista || {});
       const k = s => sinTildes(s.toLowerCase()).replace(/[^a-z0-9]/g, '');
       const rep = L.find(z => k(z.nombre) === k(dep.nombre) && z.id !== dep.id);
@@ -2488,7 +2508,7 @@ const S = {
   fichaBorrador: null,
   ficha: null,          // ficha de primera visita ya enviada (pantalla de gracias)
   dep: { lista: null, cargando: false, error: '', q: '', nivel: 'todos', anio: 'todos', orden: 'edad', editar: null, borrar: false },
-  admin: { pass: null, tab: 'reservas', data: null, cargando: false, error: '', filtroR: 'proximas', filtroT: 'todas', filtroP: 'todos', q: '', confirmar: null },
+  admin: { pass: null, tab: 'reservas', data: null, cargando: false, error: '', filtroR: 'proximas', filtroT: 'todas', filtroPago: 'todos', filtroP: 'todos', q: '', confirmar: null },
 };
 const RUTAS = ['inicio', 'historia', 'inscripcion', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'];
 const ESTADOS_PEDIDO = ['Pendiente', 'Pagado', 'Entregado', 'Cancelado'];
@@ -3880,22 +3900,28 @@ function vAdminReservas() {
   const delGrupo = G[S.admin.filtroR] || [];
   const segT = [['todas', 'Todas'], ['Suelta', 'Clases sueltas'], ['Bono', 'Bonos']]
     .map(([id, t]) => `<button type="button" data-act="filtro-t" data-f="${id}" aria-pressed="${S.admin.filtroT === id}">${t}<span class="count">${delGrupo.filter(r => deTipo(r, id)).length}</span></button>`).join('');
+  const segP = [['todos', 'Todas'], ['Pendiente', 'Pendientes de pago'], ['Pagado', 'Pagadas']]
+    .map(([id, t]) => `<button type="button" data-act="filtro-pago" data-f="${id}" aria-pressed="${S.admin.filtroPago === id}">${t}<span class="count">${delGrupo.filter(r => deTipo(r, S.admin.filtroT) && dePago(r, id)).length}</span></button>`).join('');
+  const sinPagar = d.reservas.filter(r => r.estado !== 'Cancelada' && pagoDe(r) === 'Pendiente').length;
   return `<div class="view">
-    <header class="head head-row"><div><h1 class="h1">Reservas</h1><p class="lead">${estaSemana ? `${estaSemana} ${estaSemana === 1 ? 'clase' : 'clases'} en los próximos 7 días.` : 'Sin clases en los próximos 7 días.'}</p></div>
+    <header class="head head-row"><div><h1 class="h1">Reservas</h1><p class="lead">${estaSemana ? `${estaSemana} ${estaSemana === 1 ? 'clase' : 'clases'} en los próximos 7 días.` : 'Sin clases en los próximos 7 días.'}${sinPagar ? ` ${sinPagar} ${sinPagar === 1 ? 'reserva pendiente' : 'reservas pendientes'} de pago.` : ''}</p></div>
       ${botonesCabecera}</header>
     <div class="toolbar"><div class="seg" role="group" aria-label="Filtrar reservas">${seg}</div>
       <div class="seg seg-tipo" role="group" aria-label="Clase suelta o bono">${segT}</div>
+      <div class="seg seg-pago" role="group" aria-label="Pago">${segP}</div>
       <label class="sr-only" for="a-q">Buscar</label><input class="input input-sm" id="a-q" type="search" placeholder="Buscar por nombre o teléfono" value="${esc(S.admin.q)}"></div>
     <div id="admin-list">${listaReservas(G[S.admin.filtroR])}</div>
   </div>`;
 }
 const tipoDe = r => (r.tipo === 'Bono' ? 'Bono' : 'Suelta');
 const deTipo = (r, f) => !f || f === 'todas' || tipoDe(r) === f;
+const pagoDe = r => (r.pago === 'Pagado' ? 'Pagado' : 'Pendiente');
+const dePago = (r, f) => !f || f === 'todos' || (r.estado !== 'Cancelada' && pagoDe(r) === f);
 const hayBono = () => { const a = ajustes(); return !!(a.precioBono && Number(a.clasesBono)); };
 const tipoTxt = t => (t === 'Bono' ? `Bono de ${Number(ajustes().clasesBono) || 5} clases` : 'Clase suelta');
 function listaReservas(lista) {
   const q = S.admin.q.trim();
-  const items = lista.filter(r => filtroTexto(r, q) && deTipo(r, S.admin.filtroT));
+  const items = lista.filter(r => filtroTexto(r, q) && deTipo(r, S.admin.filtroT) && dePago(r, S.admin.filtroPago));
   if (!items.length) {
     const vacio = { proximas: 'No hay reservas próximas. Cuando una familia reserve una clase, aparecerá aquí.', pasadas: 'Todavía no hay clases pasadas.', canceladas: 'No hay reservas canceladas.' }[S.admin.filtroR];
     return `<div class="empty"><p>${q ? 'Ninguna reserva coincide con la búsqueda.' : vacio}</p></div>`;
@@ -3911,6 +3937,7 @@ function listaReservas(lista) {
         ? `<span class="confirm-q">¿Cancelar esta reserva?</span><button class="btn btn-danger btn-sm" type="button" data-act="cancelar-si" data-id="${esc(r.id)}">Sí, cancelar</button><button class="btn btn-ghost btn-sm" type="button" data-act="cancelar-no">No</button>`
         : `<button class="btn btn-ghost btn-sm btn-quiet-danger" type="button" data-act="cancelar-pedir" data-id="${esc(r.id)}">Cancelar</button>`;
     }
+    const pago = r.estado === 'Cancelada' ? '' : `<div class="pago-sel" role="group" aria-label="Pago de la reserva ${esc(r.id)}">${['Pendiente', 'Pagado'].map(p => `<button type="button" class="pago-op ${p === 'Pagado' ? 'si' : 'no'}" data-act="pago" data-id="${esc(r.id)}" data-pago="${p}" aria-pressed="${pagoDe(r) === p}">${p === 'Pagado' ? ICON.check : ''}<span>${p}</span></button>`).join('')}</div>`;
     out += `<article class="row">
       <div class="time">${esc(r.hora)}</div>
       <div class="row-main">
@@ -3918,7 +3945,7 @@ function listaReservas(lista) {
         <p class="meta"><span class="sel">${esc(r.telefono)}</span>${r.email ? `, <span class="sel">${esc(r.email)}</span>` : ''}</p>
         ${r.comentario ? `<p class="note">${esc(r.comentario)}</p>` : ''}
         <p class="meta small">${esc(r.id)}, reservada el ${esc(r.creada || '')}</p>
-        <div class="actions">${acciones}</div>
+        <div class="actions">${pago}${acciones}</div>
       </div></article>`;
   });
   return out;
@@ -3992,10 +4019,16 @@ function vAdminAjustes() {
    PANEL · DEPORTISTAS (base de datos del club, solo con contraseña)
    ================================================================= */
 const anioActual = () => Number(hoyRef().slice(0, 4));
-const anioDe = x => Number(String(x.anio || '').slice(0, 4)) || 0;
+/* Nacimiento: fecha completa («14/03/2016») o solo el año («2016», «2007 o menos») */
+const nacYmd = x => { const m = String(x.anio || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? `${m[3]}-${pad(+m[2])}-${pad(+m[1])}` : ''; };
+const anioDe = x => { const f = nacYmd(x); return f ? Number(f.slice(0, 4)) : (Number(String(x.anio || '').slice(0, 4)) || 0); };
 const omenos = x => /o menos/i.test(x.anio || '');
-const edadTxt = x => { const a = anioDe(x); if (!a) return ''; const e = anioActual() - a; return omenos(x) ? `${e} o más` : `${e}`; };
-const anioTxt = x => (omenos(x) ? `${anioDe(x)} o antes` : String(anioDe(x) || x.anio || ''));
+const edadTxt = x => {
+  const f = nacYmd(x); if (f) { const e = edadDe(f); return e == null ? '' : `${e}`; }
+  const a = anioDe(x); if (!a) return ''; const e = anioActual() - a; return omenos(x) ? `${e} o más` : `${e}`;
+};
+const anioTxt = x => (nacYmd(x) ? x.anio : omenos(x) ? `${anioDe(x)} o antes` : String(anioDe(x) || x.anio || ''));
+const claveNac = x => nacYmd(x) || `${anioDe(x)}-07-01`;   // para ordenar: con fecha exacta, o a mitad de año
 const nivelesDe = lista => [...new Set(lista.map(x => x.nivel).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
 const iniciales = n => String(n).split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
 async function cargarDeportistas() {
@@ -4012,8 +4045,9 @@ function deportistasFiltrados() {
   const D = S.dep, q = sinTildes(D.q.trim().toLowerCase());
   const l = (D.lista || []).filter(x => (D.nivel === 'todos' || x.nivel === D.nivel) && (D.anio === 'todos' || String(anioDe(x)) === D.anio) && (!q || sinTildes(`${x.nombre} ${x.notas}`.toLowerCase()).includes(q)));
   const nombre = (a, b) => a.nombre.localeCompare(b.nombre, 'es');
-  if (D.orden === 'edad') return l.sort((a, b) => anioDe(a) - anioDe(b) || nombre(a, b));          // de mayor a menor
-  if (D.orden === 'edad-asc') return l.sort((a, b) => anioDe(b) - anioDe(a) || nombre(a, b));
+  const nac = (a, b) => (claveNac(a) < claveNac(b) ? -1 : claveNac(a) > claveNac(b) ? 1 : 0);
+  if (D.orden === 'edad') return l.sort((a, b) => nac(a, b) || nombre(a, b));          // de mayor a menor
+  if (D.orden === 'edad-asc') return l.sort((a, b) => nac(b, a) || nombre(a, b));
   if (D.orden === 'nombre') return l.sort(nombre);
   return l.sort((a, b) => a.nivel.localeCompare(b.nivel, 'es', { numeric: true }) || anioDe(a) - anioDe(b) || nombre(a, b));
 }
@@ -4024,8 +4058,9 @@ function filasDeportistas() {
   l.forEach(x => {
     if (S.dep.orden === 'nivel' && x.nivel !== grupo) { grupo = x.nivel; out += `<h2 class="group-h">${esc(grupo || 'Sin nivel')} <span class="count">${l.filter(y => y.nivel === grupo).length}</span></h2>`; }
     // por edad: un título por año de nacimiento («2016 · 10 años»)
-    const gAnio = anioTxt(x);
-    if (S.dep.orden.startsWith('edad') && gAnio !== grupo) { grupo = gAnio; out += `<h2 class="group-h">${esc(gAnio)}${edadTxt(x) ? ` · ${esc(edadTxt(x))} años` : ''} <span class="count">${l.filter(y => anioTxt(y) === gAnio).length}</span></h2>`; }
+    const gAnio = omenos(x) ? `${anioDe(x)} o antes` : String(anioDe(x) || '');
+    const gDe = y => (omenos(y) ? `${anioDe(y)} o antes` : String(anioDe(y) || ''));
+    if (S.dep.orden.startsWith('edad') && gAnio !== grupo) { grupo = gAnio; out += `<h2 class="group-h">Nacidas en ${esc(gAnio)}${anioDe(x) ? ` · cumplen ${anioActual() - anioDe(x)}${omenos(x) ? ' o más' : ''} en ${anioActual()}` : ''} <span class="count">${l.filter(y => gDe(y) === gAnio).length}</span></h2>`; }
     out += `<button class="dep" type="button" data-act="dep-editar" data-id="${esc(x.id)}">
       <span class="dep-av" aria-hidden="true">${esc(iniciales(x.nombre))}</span>
       <span class="dep-main"><b class="dep-n">${esc(x.nombre)}</b><span class="dep-meta">${esc(anioTxt(x))}${edadTxt(x) ? ` · <b>${esc(edadTxt(x))} años</b>` : ''}${x.notas ? ` · ${esc(x.notas)}` : ''}</span></span>
@@ -4074,12 +4109,15 @@ function formDeportista(x) {
   const nuevo = !x;
   x = x || { id: '', nombre: '', anio: '', nivel: S.dep.nivel !== 'todos' ? S.dep.nivel : '', notas: '' };
   const otro = x.nivel && !niveles.includes(x.nivel);
+  const soloAnio = !nuevo && !nacYmd(x);
   return `<div class="sheet-head"><h2 class="h2" id="sheet-title" tabindex="-1">${nuevo ? 'Añadir deportista' : 'Editar deportista'}</h2>${btnCerrar}</div>
     <form class="form" id="f-dep" novalidate data-id="${esc(x.id)}">
       <div class="field"><label for="d-nombre">Nombre y apellidos</label><input class="input" id="d-nombre" name="nombre" maxlength="90" autocomplete="off" required value="${esc(x.nombre)}"></div>
-      <div class="field"><label for="d-anio">Año de nacimiento</label>
-        <input class="input" id="d-anio" name="anio" inputmode="numeric" maxlength="20" placeholder="Ej. 2014" required value="${esc(omenos(x) ? `${anioDe(x)} o menos` : (x.anio || ''))}">
-        <span class="hint" id="d-edad">${anioDe(x) ? `${edadTxt(x)} años este año.` : 'La edad se calcula sola, y se actualiza cada año.'} Si no lo sabéis exacto, podéis poner «2007 o menos».</span></div>
+      <fieldset class="ficha-q d-nac"><legend class="label">Fecha de nacimiento</legend>
+        <div class="pildoras" role="radiogroup"><label class="pildora"><input type="radio" name="nacModo" value="fecha"${soloAnio ? '' : ' checked'}><span>Fecha completa</span></label><label class="pildora"><input type="radio" name="nacModo" value="anio"${soloAnio ? ' checked' : ''}><span>Solo el año</span></label></div>
+        <div class="d-nac-fecha"><label class="sr-only" for="d-fecha">Fecha de nacimiento</label><input class="input" id="d-fecha" name="fecha" type="date" max="${hoyRef()}" value="${esc(nacYmd(x))}"></div>
+        <div class="d-nac-anio"><label class="sr-only" for="d-anio">Año de nacimiento</label><input class="input" id="d-anio" name="anio" inputmode="numeric" maxlength="20" placeholder="Ej. 2014" value="${esc(nacYmd(x) ? '' : omenos(x) ? `${anioDe(x)} o menos` : (x.anio || ''))}"></div>
+        <span class="hint" id="d-edad">${edadTxt(x) ? `${edadTxt(x)} años.` : 'La edad se calcula sola y se actualiza cada año.'} Si solo sabéis el año, elegid «Solo el año» (también vale «2007 o menos»).</span></fieldset>
       <div class="field"><label for="d-nivel">Nivel</label>
         <select class="input select d-sel" id="d-nivel" name="nivelSel" data-change="dep-nivel-sel">${niveles.map(n => `<option${n === x.nivel ? ' selected' : ''}>${esc(n)}</option>`).join('')}<option value="__otro"${otro || !niveles.length ? ' selected' : ''}>Otro nivel…</option></select>
         <input class="input" id="d-nivel-otro" name="nivelOtro" maxlength="40" placeholder="Escribe el nivel" value="${otro ? esc(x.nivel) : ''}"${otro || !niveles.length ? '' : ' hidden'}></div>
@@ -4093,11 +4131,15 @@ function formDeportista(x) {
 async function guardarDeportistaForm(f) {
   const v = n => String((f.elements[n] || {}).value || '').trim();
   const sel = v('nivelSel');
-  const dep = { id: f.dataset.id || '', nombre: v('nombre').replace(/\s+/g, ' '), anio: v('anio').replace(/\s+/g, ' '), nivel: sel === '__otro' ? v('nivelOtro') : sel, notas: v('notas') };
+  const modo = (f.querySelector('input[name="nacModo"]:checked') || {}).value || 'fecha';
+  const fecha = v('fecha');
+  const anio = modo === 'fecha' ? (fecha ? fecha.split('-').reverse().join('/') : '') : v('anio').replace(/\s+/g, ' ');
+  const dep = { id: f.dataset.id || '', nombre: v('nombre').replace(/\s+/g, ' '), anio, nivel: sel === '__otro' ? v('nivelOtro') : sel, notas: v('notas') };
   const err = $('#d-err', f);
   const mal = (m, campo) => { err.textContent = m; err.hidden = false; if (campo && f.elements[campo]) f.elements[campo].focus(); };
   if (dep.nombre.length < 3) return mal('Escribe el nombre y los apellidos.', 'nombre');
-  if (!/^(19|20)\d{2}( o (menos|antes))?$/i.test(dep.anio) || Number(dep.anio.slice(0, 4)) > anioActual()) return mal('Escribe el año de nacimiento con 4 cifras (ej. 2014).', 'anio');
+  if (modo === 'fecha' && (!fecha || fecha > hoyRef())) return mal('Elige la fecha de nacimiento (o marca «Solo el año»).', 'fecha');
+  if (modo === 'anio' && (!/^(19|20)\d{2}( o (menos|antes))?$/i.test(dep.anio) || Number(dep.anio.slice(0, 4)) > anioActual())) return mal('Escribe el año de nacimiento con 4 cifras (ej. 2014).', 'anio');
   if (!dep.nivel) return mal('Elige o escribe el nivel.', sel === '__otro' ? 'nivelOtro' : 'nivelSel');
   const btn = f.querySelector('[type="submit"]');
   ocupado(btn, true, 'Guardando…');
@@ -4135,14 +4177,14 @@ async function exportarDeportistas(formato) {
   if (formato === 'pdf') {
     const P = await pdfNuevo('Deportistas', sub);
     P.tabla({
-      head: [['Nombre y apellidos', 'Año de nacimiento', 'Edad', 'Nivel', 'Notas']],
+      head: [['Nombre y apellidos', 'Fecha de nacimiento', 'Edad', 'Nivel', 'Notas']],
       body: l.map(x => [x.nombre, anioTxt(x), edadTxt(x) ? `${edadTxt(x)} años` : '', x.nivel, x.notas || '']),
       columnStyles: { 0: { cellWidth: 80, fontStyle: 'bold' }, 1: { cellWidth: 34 }, 2: { cellWidth: 24 }, 3: { cellWidth: 50 }, 4: { cellWidth: 'auto' } },
     });
     datos = P.fin();
   } else {
     datos = Excel.libro([{ nombre: 'Deportistas', titulo: `Deportistas · ${CONFIG.CLUB}`, subtitulo: sub,
-      columnas: [{ titulo: 'Nombre y apellidos', ancho: 34 }, { titulo: 'Año de nacimiento', ancho: 16 }, { titulo: 'Edad', ancho: 9 }, { titulo: 'Nivel', ancho: 24 }, { titulo: 'Notas', ancho: 36, tipo: 'largo' }, { titulo: 'ID', ancho: 9 }],
+      columnas: [{ titulo: 'Nombre y apellidos', ancho: 34 }, { titulo: 'Fecha de nacimiento', ancho: 18 }, { titulo: 'Edad', ancho: 9 }, { titulo: 'Nivel', ancho: 24 }, { titulo: 'Notas', ancho: 36, tipo: 'largo' }, { titulo: 'ID', ancho: 9 }],
       filas: l.map(x => [x.nombre, anioTxt(x), edadTxt(x), x.nivel, x.notas || '', x.id]) }], 'Deportistas');
   }
   const r = await guardarArchivo(archivo, datos, formato === 'pdf' ? 'application/pdf' : MIME_XLSX);
@@ -4164,9 +4206,9 @@ function datosExportar(tab, que) {
     return { lista, nombre: (QUE_PEDIDOS.find(x => x[0] === que) || ['', 'Todos'])[1] };
   }
   const q = S.admin.q.trim();
-  const lista = (gruposReservas(d.reservas)[que] || []).filter(r => filtroTexto(r, q) && deTipo(r, S.admin.filtroT));
+  const lista = (gruposReservas(d.reservas)[que] || []).filter(r => filtroTexto(r, q) && deTipo(r, S.admin.filtroT) && dePago(r, S.admin.filtroPago));
   if (que !== 'proximas') lista.sort((a, b) => (`${a.fecha} ${a.hora}` < `${b.fecha} ${b.hora}` ? -1 : 1));
-  const t = S.admin.filtroT !== 'todas' ? (S.admin.filtroT === 'Bono' ? ' · bonos' : ' · clases sueltas') : '';
+  const t = (S.admin.filtroT !== 'todas' ? (S.admin.filtroT === 'Bono' ? ' · bonos' : ' · clases sueltas') : '') + (S.admin.filtroPago !== 'todos' ? (S.admin.filtroPago === 'Pagado' ? ' · pagadas' : ' · pendientes de pago') : '');
   return { lista, nombre: (QUE_RESERVAS.find(x => x[0] === que) || ['', 'Todas'])[1] + t, q };
 }
 function hojaExportar() {
@@ -4385,8 +4427,8 @@ function filasResumen(pedidos) {
 function excelReservas(lista, sub) {
   return Excel.libro([{
     nombre: 'Reservas', titulo: `Reservas de clases particulares · ${CONFIG.CLUB}`, subtitulo: sub,
-    columnas: [{ titulo: 'Fecha', ancho: 12, tipo: 'fecha' }, { titulo: 'Día', ancho: 11 }, { titulo: 'Hora', ancho: 8 }, { titulo: 'Deportista', ancho: 28 }, { titulo: 'Teléfono', ancho: 16 }, { titulo: 'Email', ancho: 28 }, { titulo: 'Tipo', ancho: 18 }, { titulo: 'Comentario', ancho: 36, tipo: 'largo' }, { titulo: 'Estado', ancho: 12 }, { titulo: 'Referencia', ancho: 12 }, { titulo: 'Reservada el', ancho: 17 }],
-    filas: lista.map(r => [r.fecha, cap(DIAS[diaSemana(r.fecha)]), r.hora, r.nombre, r.telefono, r.email, tipoTxt(tipoDe(r)), r.comentario, r.estado, r.id, r.creada]),
+    columnas: [{ titulo: 'Fecha', ancho: 12, tipo: 'fecha' }, { titulo: 'Día', ancho: 11 }, { titulo: 'Hora', ancho: 8 }, { titulo: 'Deportista', ancho: 28 }, { titulo: 'Teléfono', ancho: 16 }, { titulo: 'Email', ancho: 28 }, { titulo: 'Tipo', ancho: 18 }, { titulo: 'Comentario', ancho: 36, tipo: 'largo' }, { titulo: 'Estado', ancho: 12 }, { titulo: 'Pago', ancho: 11 }, { titulo: 'Referencia', ancho: 12 }, { titulo: 'Reservada el', ancho: 17 }],
+    filas: lista.map(r => [r.fecha, cap(DIAS[diaSemana(r.fecha)]), r.hora, r.nombre, r.telefono, r.email, tipoTxt(tipoDe(r)), r.comentario, r.estado, r.estado === 'Cancelada' ? '' : pagoDe(r), r.id, r.creada]),
   }], 'Reservas de clases particulares');
 }
 function excelPedidos(lista, sub) {
@@ -4488,9 +4530,9 @@ async function pdfNuevo(titulo, sub) {
 async function pdfReservas(lista, sub) {
   const P = await pdfNuevo('Reservas de clases particulares', sub);
   P.tabla({
-    head: [['Fecha', 'Hora', 'Deportista', 'Teléfono', 'Tipo', 'Comentario', 'Estado', 'Ref.']],
-    body: lista.map(r => { const f = parseYmd(r.fecha); return [`${diaCorto(r.fecha)} ${pad(f.d)}/${pad(f.m)}/${f.y}`, r.hora, r.nombre, r.telefono, tipoTxt(tipoDe(r)), r.comentario || '', r.estado, r.id]; }),
-    columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 15 }, 2: { cellWidth: 50, fontStyle: 'bold' }, 3: { cellWidth: 28 }, 4: { cellWidth: 34 }, 5: { cellWidth: 'auto' }, 6: { cellWidth: 22 }, 7: { cellWidth: 17 } },
+    head: [['Fecha', 'Hora', 'Deportista', 'Teléfono', 'Tipo', 'Comentario', 'Estado', 'Pago', 'Ref.']],
+    body: lista.map(r => { const f = parseYmd(r.fecha); return [`${diaCorto(r.fecha)} ${pad(f.d)}/${pad(f.m)}/${f.y}`, r.hora, r.nombre, r.telefono, tipoTxt(tipoDe(r)), r.comentario || '', r.estado, r.estado === 'Cancelada' ? '' : pagoDe(r), r.id]; }),
+    columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 15 }, 2: { cellWidth: 46, fontStyle: 'bold' }, 3: { cellWidth: 26 }, 4: { cellWidth: 32 }, 5: { cellWidth: 'auto' }, 6: { cellWidth: 21 }, 7: { cellWidth: 20, fontStyle: 'bold' }, 8: { cellWidth: 16 } },
     didParseCell: h => { if (h.section === 'body' && lista[h.row.index] && lista[h.row.index].estado === 'Cancelada') { h.cell.styles.textColor = [150, 143, 130]; h.cell.styles.fontStyle = 'italic'; } },
   });
   return P.fin();
@@ -4695,6 +4737,16 @@ const ACT = {
     toast('Reserva cancelada. Avisa a la familia por WhatsApp si hace falta.', 5000);
   },
   'exportar': () => sheet.open(hojaExportar()),
+  'filtro-pago': t => { S.admin.filtroPago = t.dataset.f; renderView(); },
+  'pago': async t => {
+    const id = t.dataset.id, pago = t.dataset.pago;
+    const r0 = S.admin.data.reservas.find(z => z.id === id);
+    if (!r0 || pagoDe(r0) === pago) return;
+    const antes = r0.pago; r0.pago = pago; renderView();             // se ve al momento; si falla, se deshace
+    const r = await API.admin('pagoReserva', { id, pago });
+    if (!r.ok) { r0.pago = antes; renderView(); if (r.code === 'auth') return salirAdmin(r.error); return toast(r.error || 'No se ha podido guardar el pago.'); }
+    toast(pago === 'Pagado' ? `${id}: pagada.` : `${id}: pendiente de pago.`);
+  },
   'dep-refrescar': () => { S.dep.lista = null; S.dep.error = ''; renderView(); },
   'dep-nivel': t => { S.dep.nivel = t.dataset.f; if (S.dep.nivel === 'todos') S.dep.orden = 'edad'; renderView(); },
   'dep-nuevo': () => { sheet.open(formDeportista(null)); },
@@ -4787,6 +4839,7 @@ async function onChange(e) {
 function onInput(e) {
   if (e.target.id === 'dep-q') { S.dep.q = e.target.value; pintarListaDep(); return; }
   if (e.target.id === 'd-anio') { const h = $('#d-edad'); const a = Number(String(e.target.value).slice(0, 4)); if (h && a > 1900 && a <= anioActual()) h.textContent = `${anioActual() - a}${/o (menos|antes)/i.test(e.target.value) ? ' o más' : ''} años este año.`; return; }
+  if (e.target.id === 'd-fecha') { const h = $('#d-edad'); const ed = edadDe(e.target.value); if (h && ed != null) h.textContent = `${ed} ${ed === 1 ? 'año' : 'años'}.`; return; }
   if (e.target.id === 'a-q') {
     S.admin.q = e.target.value;
     const box = $('#admin-list');
