@@ -571,6 +571,7 @@ input[type="search"].input { -webkit-appearance: none; }
 .place-name { font-weight: 800; }
 .ph { color: var(--muted); font-style: italic; }
 .carousel {
+  position: relative;
   margin-left: calc(-1 * var(--gl));
   margin-right: calc(-1 * var(--gr));
   padding-top: 10px;
@@ -585,6 +586,33 @@ input[type="search"].input { -webkit-appearance: none; }
 }
 .carousel:hover .car-track, .carousel:focus-within .car-track, .carousel:active .car-track { animation-play-state: paused; }
 @keyframes desliza { to { transform: translateX(-50%); } }
+/* con JavaScript el movimiento lo lleva el script (así se puede arrastrar sin perder el avance automático) */
+.carousel.con-js .car-track { animation: none; will-change: transform; touch-action: pan-y; cursor: grab; -webkit-user-select: none; user-select: none; }
+.carousel.arrastrando .car-track { cursor: grabbing; }
+.car-btn {
+  position: absolute;
+  top: calc(50% + 5px);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 238, 180, .55);
+  border-radius: 50%;
+  background: rgba(11, 11, 12, .72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--gold);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background-color .15s, color .15s;
+}
+.car-btn svg { width: 18px; height: 18px; }
+.car-btn:hover { background: var(--gold); color: #0B0B0C; }
+.car-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.car-prev { left: calc(var(--gl) + 4px); }
+.car-next { right: calc(var(--gr) + 4px); }
+.carousel:not(.con-js) .car-btn { display: none; }
 .car-item {
   flex: none;
   width: 176px;
@@ -619,8 +647,8 @@ input[type="search"].input { -webkit-appearance: none; }
   .home > :not(.carousel) { max-width: 664px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .carousel { overflow-x: auto; }
-  .car-dup { display: none; }
+  .carousel:not(.con-js) { overflow-x: auto; }
+  .carousel:not(.con-js) .car-dup { display: none; }
 }
 
 /* ---------- clases particulares ---------- */
@@ -1945,7 +1973,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '1e61d47ca160';   // la pone build.py en cada versión
+const VERSION_APP = '948435796129';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -2539,6 +2567,7 @@ function renderView() {
   document.body.classList.toggle('en-inicio', S.route === 'inicio');
   el.view.innerHTML = v();
   if (S.route === 'inscripcion') montarFicha(borrador);
+  montarCarrusel();
   const m = el.view.querySelector('.month[aria-pressed="true"], .hor-chip[aria-pressed="true"]');
   if (m && m.scrollIntoView) { try { m.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) { /* nada */ } }
   // fila de filtros que no cabe: se difumina el borde derecho mientras quede algo por ver
@@ -2926,7 +2955,64 @@ function carrusel(fotos, byn) {
   else return '';
   while (items.length < 6) items = items.concat(items);
   const copia = items.map(x => x.replace(/^<(\w+) class="/, '<$1 aria-hidden="true" class="car-dup ')).join('');
-  return `<section class="carousel${byn ? ' byn' : ''}" aria-label="Fotos del club"><div class="car-track" style="--dur: ${items.length * 5}s">${items.join('')}${copia}</div></section>`;
+  return `<section class="carousel${byn ? ' byn' : ''}" aria-label="Fotos del club"><div class="car-track" style="--dur: ${items.length * 5}s">${items.join('')}${copia}</div>
+    <button class="car-btn car-prev" type="button" aria-label="Fotos anteriores">${ICON.back}</button><button class="car-btn car-next" type="button" aria-label="Más fotos">${ICON.fwd}</button></section>`;
+}
+/* Carrusel: avanza solo y, además, se puede arrastrar con el dedo o el ratón y mover con las flechas.
+   Al soltar, sigue avanzando solo desde donde se dejó. */
+function montarCarrusel() {
+  const car = el.view.querySelector('.carousel');
+  const track = car && car.querySelector('.car-track');
+  if (!track || track.dataset.js) return;
+  track.dataset.js = '1';
+  car.classList.add('con-js');
+  const quieto = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let x = 0, ult = performance.now(), arrastre = null, encima = false, pausaHasta = 0, anim = null;
+  const mitad = () => track.scrollWidth / 2;
+  const dur = parseFloat(track.style.getPropertyValue('--dur')) || 40;
+  const envolver = v => { const m = mitad(); return m > 0 ? ((v % m) + m) % m : 0; };
+  const pintar = () => { track.style.transform = `translate3d(${-x}px,0,0)`; };
+  const paso = () => { const it = track.querySelector('.car-item'); return it ? it.getBoundingClientRect().width + 12 : 200; };
+  function bucle(t) {
+    if (!track.isConnected) return;
+    const dt = Math.min(64, t - ult); ult = t;
+    if (anim) {
+      const k = Math.min(1, (t - anim.t0) / 420), e = 1 - Math.pow(1 - k, 3);
+      x = envolver(anim.desde + anim.dist * e);
+      if (k >= 1) anim = null;
+    } else if (!arrastre && !encima && !quieto && t > pausaHasta && document.visibilityState === 'visible') {
+      x = envolver(x + (mitad() / dur) * dt / 1000);
+    }
+    pintar();
+    requestAnimationFrame(bucle);
+  }
+  requestAnimationFrame(bucle);
+  const mover = dir => { anim = { desde: x, dist: dir * paso(), t0: performance.now() }; pausaHasta = performance.now() + 2500; };
+  car.querySelector('.car-prev').addEventListener('click', () => mover(-1));
+  car.querySelector('.car-next').addEventListener('click', () => mover(1));
+  // con ratón se para mientras está encima (como antes); en el móvil, un toque no lo deja parado
+  car.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') encima = true; });
+  car.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') encima = false; });
+  track.querySelectorAll('img').forEach(i => { i.draggable = false; });
+  track.addEventListener('pointerdown', e => {
+    if (e.button > 0) return;
+    anim = null;
+    arrastre = { x0: e.clientX, y0: e.clientY, desde: x, id: e.pointerId, mueve: false };
+  });
+  track.addEventListener('pointermove', e => {
+    if (!arrastre || e.pointerId !== arrastre.id) return;
+    const dx = e.clientX - arrastre.x0, dy = e.clientY - arrastre.y0;
+    if (!arrastre.mueve) {
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 6) { arrastre = null; return; }   // el dedo va hacia abajo: deja hacer scroll
+      if (Math.abs(dx) < 6) return;
+      arrastre.mueve = true; car.classList.add('arrastrando');
+      try { track.setPointerCapture(e.pointerId); } catch (er) { /* nada */ }
+    }
+    x = envolver(arrastre.desde - dx);
+  });
+  const soltar = () => { if (!arrastre) return; arrastre = null; car.classList.remove('arrastrando'); pausaHasta = performance.now() + 1800; };
+  track.addEventListener('pointerup', soltar);
+  track.addEventListener('pointercancel', soltar);
 }
 function vInicio() {
   // los dos botones principales, iguales: reservar clase y pedir ropa
