@@ -1915,6 +1915,17 @@ button.info-item:hover .info-ir { border-color: #14110A; background: #14110A; co
 .ficha-done { justify-items: center; padding: 28px 20px; border: 1px solid rgba(227, 194, 90, .3); border-radius: var(--r-lg); background: var(--fondo-negro); text-align: center; }
 .ficha-done .btn { width: 100%; max-width: 420px; }
 
+/* ficha de prenda: «Incluye» (equipación completa…), cada prenda con su foto pequeña */
+.incluye { display: grid; gap: 8px; margin-top: 8px; }
+.incluye .label { color: var(--gold); font-family: var(--display); font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; }
+.inc-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.inc-lista li { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px 10px 6px 6px; border: 1px solid rgba(227, 194, 90, .28); border-radius: var(--r-md); background: var(--fondo-negro); }
+.inc-foto { flex: none; display: grid; place-items: center; width: 40px; height: 40px; overflow: hidden; border-radius: 10px; background: var(--tile); color: var(--gold); }
+.inc-foto img { width: 100%; height: 100%; object-fit: contain; }
+.inc-foto svg { width: 20px; height: 20px; }
+.inc-n { min-width: 0; font-size: var(--fs-sm); font-weight: 700; line-height: 1.25; }
+.inc-n .marca { color: var(--gold); }
+
 </style>
 </head>
 <body>
@@ -1975,7 +1986,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '1cda171df862';   // la pone build.py en cada versión
+const VERSION_APP = 'acc6f80cd542';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -2218,7 +2229,7 @@ const EJEMPLO = {
     { id: 'camiseta-tirantes', nombre: 'Camiseta', categoria: 'Competición', tipo: 'camiseta', precio: 25, tallas: TALLAS_COMPETICION, descripcion: 'Espalda nadadora, con franjas doradas en los costados y el logo en el pecho.', fotos: ['fotos/ropa/camiseta-tirantes.jpg'], activo: true },
     { id: 'chaqueta', nombre: 'Chaqueta Chándal', categoria: 'Competición', tipo: 'chandal', precio: 35, tallas: TALLAS_COMPETICION, descripcion: 'Negra con franjas doradas y cremallera, con el logo del club delante y detrás.', fotos: ['fotos/ropa/chaqueta.jpg', 'fotos/ropa/chaqueta-detras.jpg'], activo: true },
     { id: 'pantalon', nombre: 'Pantalón Chándal', categoria: 'Competición', tipo: 'otro', precio: 25, tallas: TALLAS_COMPETICION, descripcion: 'Negro con franjas doradas, a juego con la chaqueta.', fotos: ['fotos/ropa/pantalon-delante.jpg', 'fotos/ropa/pantalon-detras.jpg'], activo: true },
-    { id: 'chandal-completo', nombre: 'Chándal Completo', categoria: 'Competición', tipo: 'chandal', precio: 130, tallas: TALLAS_COMPETICION, descripcion: 'Chaqueta y pantalón del chándal oficial del club.', fotos: ['fotos/ropa/chandal.jpg', 'fotos/ropa/chaqueta.jpg', 'fotos/ropa/chaqueta-detras.jpg', 'fotos/ropa/pantalon-delante.jpg', 'fotos/ropa/pantalon-detras.jpg'], activo: true },
+    { id: 'chandal-completo', nombre: 'Equipación Completa', categoria: 'Competición', tipo: 'chandal', precio: 130, tallas: TALLAS_COMPETICION, descripcion: 'Toda la equipación de competición del club, en negro y oro. Incluye: Chaqueta Chándal, Pantalón Chándal, Camiseta, Short y Top.', fotos: ['fotos/ropa/chandal.jpg', 'fotos/ropa/chaqueta.jpg', 'fotos/ropa/pantalon-delante.jpg', 'fotos/ropa/camiseta-tirantes.jpg', 'fotos/ropa/short.jpg', 'fotos/ropa/top.jpg'], activo: true },
     { id: 'short', nombre: 'Short', categoria: 'Competición', tipo: 'otro', precio: 20, tallas: TALLAS_COMPETICION, descripcion: 'Cintura cruzada, con el logo dorado.', fotos: ['fotos/ropa/short.jpg'], activo: true },
     { id: 'top', nombre: 'Top', categoria: 'Competición', tipo: 'otro', precio: 25, tallas: TALLAS_COMPETICION, descripcion: 'Espalda nadadora, con el logo dorado.', fotos: ['fotos/ropa/top.jpg'], activo: true },
     { id: 'sudadera', nombre: 'Sudadera con Capucha', categoria: 'Competición, Afición', tipo: 'sudadera', precio: 20, tallas: TALLAS_SUDADERA, descripcion: 'Con bolsillo delantero y el logo dorado.', fotos: ['fotos/ropa/sudadera.jpg'], activo: true },
@@ -3286,9 +3297,28 @@ function abrirProducto(id) {
   conectarGaleria();
 }
 /* Galería de la ficha: se desliza entre fotos (delante, detrás…) y al tocar una se abre a pantalla completa */
+/* Descripción con «Incluye: Chaqueta Chándal, Camiseta, Short y Top» → el texto y la lista de prendas que contiene */
+function partesDescripcion(d) {
+  const m = String(d || '').match(/^([\s\S]*?)\s*Incluye\s*:\s*([\s\S]+)$/i);
+  if (!m) return { texto: String(d || ''), incluye: [] };
+  const incluye = m[2].replace(/\.\s*$/, '').split(/\s*(?:[,;\n·•]|\s-\s|\s+y\s+)\s*/).map(x => x.replace(/^[-–•]\s*/, '').trim()).filter(Boolean);
+  return { texto: m[1].trim(), incluye };
+}
+function listaIncluye(items) {
+  if (!items.length) return '';
+  const marca = (CONFIG.MARCA_ROPA || '').toLowerCase();
+  const base = n => (marca && n.toLowerCase().endsWith(' ' + marca) ? n.slice(0, -marca.length - 1).trim() : n);
+  const norm = n => base(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return `<div class="incluye"><p class="label">Incluye</p><ul class="inc-lista">${items.map(n => {
+    const pr = productos().find(x => norm(x.nombre) === norm(n));
+    const f = pr && fotosDe(pr)[0];
+    return `<li><span class="inc-foto">${f ? `<img src="${esc(f)}" alt="" loading="lazy">` : ICON.shirt}</span><span class="inc-n">${conMarca(base(n))}</span></li>`;
+  }).join('')}</ul></div>`;
+}
 function galeria(p) {
   const fs = fotosDe(p);
-  const precio = `<p class="price${conPrecio(p) ? '' : ' pend'}">${precioTxt(p)}</p>${p.descripcion ? `<p class="meta">${esc(p.descripcion)}</p>` : ''}`;
+  const desc = partesDescripcion(p.descripcion);
+  const precio = `<p class="price${conPrecio(p) ? '' : ' pend'}">${precioTxt(p)}</p>${desc.texto ? `<p class="meta">${esc(desc.texto)}</p>` : ''}${listaIncluye(desc.incluye)}`;
   if (!fs.length) return `<div class="prod-detail"><span class="prod-fig">${figura(p)}</span><div class="prod-copy">${precio}</div></div>`;
   const varias = fs.length > 1;
   return `<div class="galeria">
