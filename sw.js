@@ -1,5 +1,5 @@
 /* Service worker: la app abre sin conexión; las reservas y pedidos siempre van por la red. */
-const VERSION = 'club-199423d34198';
+const VERSION = 'club-8fba74812c38';
 const BASE = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

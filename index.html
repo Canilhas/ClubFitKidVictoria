@@ -596,6 +596,7 @@ input[type="search"].input { -webkit-appearance: none; }
   background: var(--surface);
 }
 .car-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.car-item.ancha { width: 330px; aspect-ratio: 3 / 2; }
 /* fotos en blanco y negro, como en los carteles del club (se puede quitar en Ajustes de la hoja) */
 .carousel.byn .car-item img { filter: grayscale(1) contrast(1.08); transition: filter .4s ease; }
 @media (hover: hover) { .carousel.byn .car-item:hover img { filter: none; } }
@@ -613,6 +614,7 @@ input[type="search"].input { -webkit-appearance: none; }
 .car-ph svg { width: 28px; height: 28px; }
 @media (min-width: 900px) {
   .car-item { width: 210px; }
+  .car-item.ancha { width: 394px; }
   body.en-inicio .main-in { max-width: none; }
   .home > :not(.carousel) { max-width: 664px; }
 }
@@ -1806,6 +1808,83 @@ button.info-item:hover .info-ir { border-color: #14110A; background: #14110A; co
 .lic-nota svg { width: 18px; height: 18px; margin-top: 1px; color: var(--gold); }
 .lic-nota b { color: var(--ink); }
 
+/* ---------- inscripciones: ficha de primera visita ---------- */
+.ficha { max-width: 760px; }
+@media (min-width: 900px) { .ficha { margin-inline: auto; width: 100%; } }
+.ficha-intro {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 4px 12px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 238, 180, .55);
+  border-radius: var(--r-lg);
+  background: var(--fondo-oro);
+  color: #14110A;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.ficha-intro-ico { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #14110A; color: var(--gold); }
+.ficha-intro-ico svg { width: 19px; height: 19px; }
+.ficha-intro-t { font-family: var(--display); font-size: 1.0625rem; font-weight: 700; line-height: 1.2; }
+.ficha-intro p { font-size: var(--fs-xs); line-height: 1.5; }
+.ficha-intro p + p { margin-top: 4px; }
+.ficha-cerrado { margin-top: 8px !important; font-weight: 700; }
+.ficha-pasos { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+@media (max-width: 519px) { .ficha-pasos li { flex-direction: column; justify-content: center; gap: 5px; text-align: center; } }
+.ficha-pasos li { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border-radius: var(--r-md); background: rgba(20, 17, 10, .08); font-size: .6875rem; font-weight: 700; line-height: 1.25; }
+.ficha-pasos b { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #14110A; color: var(--gold); font-size: .6875rem; }
+.ficha-form { gap: 16px; }
+.ficha-sec {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid rgba(227, 194, 90, .24);
+  border-radius: var(--r-lg);
+  background: var(--fondo-negro);
+}
+.ficha-sec-t { display: flex; align-items: center; gap: 12px; color: var(--gold); font-family: var(--display); font-size: 1.125rem; font-weight: 700; line-height: 1.25; }
+.ficha-n { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--fondo-oro); color: #14110A; font-size: .9375rem; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); }
+.ficha-2 { display: grid; gap: 18px; }
+@media (min-width: 560px) { .ficha-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.ficha input[type="date"].input { min-width: 0; color-scheme: dark; }
+.edad-chip { justify-self: start; padding: 4px 12px; border-radius: var(--pill); background: var(--gold-soft); color: var(--gold); font-size: var(--fs-xs); font-weight: 800; }
+.ficha-q { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.ficha-leg { font-weight: 500; color: var(--muted); line-height: 1.5; }
+.ficha-leg b { color: var(--ink); }
+/* respuestas en forma de píldora: la elegida, en oro */
+.pildoras { display: flex; flex-wrap: wrap; gap: 8px; }
+.pildora { position: relative; cursor: pointer; }
+.pildora input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.pildora span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 1.5px solid var(--line); border-radius: var(--pill); background: var(--surface-2); font-weight: 700; font-size: var(--fs-sm); transition: border-color .15s, background-color .15s, color .15s; }
+.pildora:hover span { border-color: rgba(227, 194, 90, .6); }
+.pildora input:checked + span { border-color: rgba(255, 238, 180, .7); background: var(--fondo-oro); color: #14110A; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
+.pildora input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ficha-q[aria-invalid="true"] .pildora span, .pildoras:has(input[aria-invalid="true"]) .pildora span { border-color: var(--bad); }
+/* al contestar «Sí», aparece el campo para explicarlo */
+.revela { display: none; }
+.ficha-q:has(input[value="Sí"]:checked) .revela { display: grid; animation: aparece .2s ease; }
+.ficha-emerg { display: grid; gap: 12px; padding: 16px; border: 1px dashed rgba(227, 194, 90, .35); border-radius: var(--r-md); }
+.ficha-emerg .label { display: flex; align-items: center; gap: 8px; color: var(--gold); }
+.ficha-emerg .label svg { width: 18px; height: 18px; }
+.ficha .check { color: rgba(244, 241, 234, .82); line-height: 1.5; }
+.ficha .check b { color: var(--ink); }
+.ficha-fecha { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--r-md); color: var(--muted); font-weight: 600; }
+.ficha-fecha svg { width: 18px; height: 18px; color: var(--gold); }
+/* recuadro de la firma: papel claro, con una línea de base como en la ficha impresa */
+.firma-caja { position: relative; border: 1.5px dashed rgba(227, 194, 90, .55); border-radius: var(--r-md); background: #F7F4EC; overflow: hidden; touch-action: none; }
+.firma-caja::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 40px; border-bottom: 1px solid rgba(20, 17, 10, .25); pointer-events: none; }
+.firma-caja[aria-invalid="true"] { border-color: var(--bad); }
+.firma-lienzo { display: block; width: 100%; height: 170px; cursor: crosshair; touch-action: none; }
+.firma-guia { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; color: rgba(20, 17, 10, .45); font-size: var(--fs-xs); font-weight: 600; pointer-events: none; }
+.firma-guia svg { width: 18px; height: 18px; }
+.firma-caja.firmada .firma-guia { display: none; }
+.firma-borrar { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border: 1px solid rgba(20, 17, 10, .25); border-radius: var(--pill); background: #FFFFFF; color: #14110A; font: inherit; font-size: var(--fs-xs); font-weight: 700; cursor: pointer; }
+.firma-borrar svg { width: 14px; height: 14px; }
+.ficha-enviar { min-width: 0; width: 100%; }
+.ficha-done { justify-items: center; padding: 28px 20px; border: 1px solid rgba(227, 194, 90, .3); border-radius: var(--r-lg); background: var(--fondo-negro); text-align: center; }
+.ficha-done .btn { width: 100%; max-width: 420px; }
+
 </style>
 </head>
 <body>
@@ -1866,7 +1945,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '199423d34198';   // la pone build.py en cada versión
+const VERSION_APP = '8fba74812c38';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -1970,9 +2049,18 @@ const EJEMPLO = {
     contacto: { email: 'clubfitkidvictoria@gmail.com', telefonos: ['+34 627 09 29 40', '+34 610 63 00 18'] },
     lugar: { titulo: 'Dónde estamos', nombre: 'Plaça de Sant Felip Neri, 4', direccion: 'Camins al Grau, 46021 València', mapa: 'https://www.google.com/maps/place//data=!4m2!3m1!1s0xd6049159e0ba4c1:0x23e634ffb81fdaa3' },
     fotos: [
+      { src: 'fotos/fk-salto-febd.jpg', alt: 'Salto en spagat delante del panel de la FEBD' },
       { src: 'fotos/victoria-salto.jpg', alt: 'Salto delante del logo del club' },
+      { src: 'fotos/fk-pose-blanco.jpg', alt: 'Pose de competición con maillot blanco' },
+      { src: 'fotos/fk-grupo-coreografia.jpg', alt: 'Coreografía de grupo con portés' },
       { src: 'fotos/victoria-pose.jpg', alt: 'Pose de baile con el top del club' },
+      { src: 'fotos/fk-salto-espalda.jpg', alt: 'Salto con la espalda arqueada' },
+      { src: 'fotos/fk-equilibrio-negro.jpg', alt: 'Equilibrio sobre las manos con maillot negro' },
+      { src: 'fotos/fk-grupo-dorado.jpg', alt: 'Grupo infantil con maillots dorados' },
       { src: 'fotos/victoria-equilibrio.jpg', alt: 'Equilibrio sobre las manos en el tapiz' },
+      { src: 'fotos/fk-pose-verde.jpg', alt: 'Pose de rodillas con maillot verde' },
+      { src: 'fotos/fk-trio-vuelo.jpg', alt: 'Trío en salto en plancha' },
+      { src: 'fotos/fk-aguja.jpg', alt: 'Equilibrio en aguja con maillot de flecos' },
     ],
   },
   historia: {
@@ -2235,7 +2323,13 @@ const Demo = (() => {
     if (op === 'reiniciar') { db = sembrar(); guardar(); return espera({ ok: true, data: {} }); }
     return espera({ ok: false, error: 'Operación desconocida.' });
   }
-  return { init, slots, reservar, pedido, admin };
+  async function inscribir(d) {
+    if (!d || String(d.nino || '').trim().length < 2 || !d.firma) return espera({ ok: false, error: 'Faltan datos de la ficha.' });
+    const n = (store.get('club-demo-fichas', 0) || 0) + 1;
+    store.set('club-demo-fichas', n);
+    return espera({ ok: true, data: { id: 'I-' + pad4(n), avisado: true, confirmacion: true } }, 600);
+  }
+  return { init, slots, reservar, pedido, inscribir, admin };
 })();
 
 /* ---------- conexión con Google Apps Script ---------- */
@@ -2259,12 +2353,14 @@ const API = DEMO ? {
   slots: m => Demo.slots(m),
   reservar: d => Demo.reservar(d),
   pedido: d => Demo.pedido(d),
+  inscribir: d => Demo.inscribir(d),
   admin: (op, x = {}) => Demo.admin(op, Object.assign({ password: S.admin.pass }, x)),
 } : {
   init: () => Remote.get({ action: 'init' }),
   slots: m => Remote.get({ action: 'slots', mes: m }),
   reservar: d => Remote.post(Object.assign({ action: 'reservar' }, d)),
   pedido: d => Remote.post(Object.assign({ action: 'pedido' }, d)),
+  inscribir: d => Remote.post(Object.assign({ action: 'inscripcion' }, d)),
   admin: (op, x = {}) => Remote.post(Object.assign({ action: 'admin', op, password: S.admin.pass }, x)),
 };
 
@@ -2279,9 +2375,11 @@ const S = {
   sel: null,
   ropaCat: null,
   horGrupo: null,
+  fichaBorrador: null,
+  ficha: null,          // ficha de primera visita ya enviada (pantalla de gracias)
   admin: { pass: null, tab: 'reservas', data: null, cargando: false, error: '', filtroR: 'proximas', filtroT: 'todas', filtroP: 'todos', q: '', confirmar: null },
 };
-const RUTAS = ['inicio', 'historia', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'];
+const RUTAS = ['inicio', 'historia', 'inscripcion', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'];
 const ESTADOS_PEDIDO = ['Pendiente', 'Pagado', 'Entregado', 'Cancelado'];
 const ajustes = () => (S.init && S.init.ajustes) || {};
 const hoyRef = () => (S.init && S.init.hoy) || ymd(new Date());
@@ -2316,6 +2414,8 @@ const ICON = {
   billete: ic('<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5h.01M18 14.5h.01"/>'),
   tarjeta: ic('<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 14.5h4"/>'),
   banco: ic('<path d="M3.5 9.5 12 5l8.5 4.5M5.5 10.5v6.5M10 10.5v6.5M14 10.5v6.5M18.5 10.5v6.5M3.5 19.5h17"/>'),
+  userPlus: ic('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.5 6.5-5.5 1.6 0 3 .5 4.1 1.4M18 13.5v6M15 16.5h6"/>'),
+  firma: ic('<path d="M3 17.5c2.2 0 3.3-6 5.2-6 1.6 0 .4 5 2.1 5 1.4 0 1.9-3.2 3.3-3.2 1.1 0 1.2 2.3 2.4 2.3.9 0 1.5-.8 2-1.6M3 21h18"/>'),
   user: ic('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>'),
   users: ic('<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19.5c.6-3.1 2.8-4.8 5.5-4.8s4.9 1.7 5.5 4.8"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M15.6 14.8c2.6-.2 4.5 1.3 5 4.2"/>'),
   tag: ic('<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.1 6.1a1.5 1.5 0 0 1-2.1 0z"/><circle cx="8" cy="8" r="1.3"/>'),
@@ -2431,9 +2531,13 @@ function ir(ruta) {
 /* ---------- pintado ---------- */
 function render() { renderNav(); renderView(); renderCarrito(); }
 function renderView() {
-  const v = { inicio: vInicio, historia: vHistoria, reservas: vReservas, ropa: vRopa, horarios: vHorarios, temporada: vTemporada, calendario: vCalendario, admin: vAdmin }[S.route] || vInicio;
+  // lo escrito en la ficha de inscripción no se pierde al cambiar de sección o al repintar
+  const borrador = guardarBorradorFicha() || S.fichaBorrador;
+  S.fichaBorrador = S.route === 'inscripcion' ? null : borrador;
+  const v = { inicio: vInicio, historia: vHistoria, inscripcion: vInscripcion, reservas: vReservas, ropa: vRopa, horarios: vHorarios, temporada: vTemporada, calendario: vCalendario, admin: vAdmin }[S.route] || vInicio;
   document.body.classList.toggle('en-inicio', S.route === 'inicio');
   el.view.innerHTML = v();
+  if (S.route === 'inscripcion') montarFicha(borrador);
   const m = el.view.querySelector('.month[aria-pressed="true"], .hor-chip[aria-pressed="true"]');
   if (m && m.scrollIntoView) { try { m.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) { /* nada */ } }
   // fila de filtros que no cabe: se difumina el borde derecho mientras quede algo por ver
@@ -2458,7 +2562,7 @@ function renderNav() {
   const enAdmin = S.route === 'admin' && !!S.admin.pass;
   const items = enAdmin
     ? [['reservas', 'Reservas', ICON.cal], ['pedidos', 'Pedidos', ICON.bag], ['ajustes', 'Ajustes', ICON.sliders]]
-    : [['inicio', 'Inicio', ICON.home], ['historia', 'Nuestra historia', ICON.libro], ['reservas', 'Clases particulares', ICON.cal], ['ropa', 'Ropa del club', ICON.shirt], ['horarios', 'Horarios', ICON.clock], ['temporada', 'Temporada', ICON.flag], ['calendario', 'Competiciones', ICON.trophy]];
+    : [['inicio', 'Inicio', ICON.home], ['historia', 'Nuestra historia', ICON.libro], ['inscripcion', 'Inscripciones', ICON.userPlus], ['reservas', 'Clases particulares', ICON.cal], ['ropa', 'Ropa del club', ICON.shirt], ['horarios', 'Horarios', ICON.clock], ['temporada', 'Temporada', ICON.flag], ['calendario', 'Competiciones', ICON.trophy]];
   el.tabs.innerHTML = (enAdmin ? '<p class="nav-mode">Panel del club</p>' : '') + items.map(([k, label, icon]) => {
     const cur = enAdmin ? S.admin.tab === k : S.route === k;
     const attrs = cur ? ' aria-current="page"' : '';
@@ -2538,6 +2642,265 @@ function ocupado(btn, on, txt) {
 }
 
 /* =================================================================
+   INSCRIPCIONES: ficha de primera visita (entrenamiento recreativo infantil)
+   ================================================================= */
+/* grupos recreativos de la pestaña Horarios («3-4 años», «5-7 años»…) */
+function gruposRecreativos() {
+  const g = [];
+  ((S.init && S.init.entrenamientos) || []).filter(x => /recrea/i.test(x.tipo || '')).forEach(x => String(x.grupo || '').split(/\s*,\s*|\s+y\s+/).forEach(n => { n = n.trim(); if (n && !g.includes(n)) g.push(n); }));
+  const desde = n => Number((n.match(/\d+/) || [99])[0]);
+  return g.sort((a, b) => desde(a) - desde(b));
+}
+function edadDe(nac, hoy = hoyRef()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nac || '') || nac >= hoy) return null;
+  const a = nac.split('-').map(Number), b = hoy.split('-').map(Number);
+  return b[0] - a[0] - (b[1] < a[1] || (b[1] === a[1] && b[2] < a[2]) ? 1 : 0);
+}
+function grupoPorEdad(edad) {
+  if (edad == null) return '';
+  return gruposRecreativos().find(g => { const m = g.match(/(\d+)\s*[-–a]\s*(\d+)/); return m && edad >= +m[1] && edad <= +m[2]; }) || '';
+}
+const siNo = (name, label, extra = '') => `<fieldset class="ficha-q"><legend class="label">${label}</legend>
+  <div class="pildoras" role="radiogroup">${['No', 'Sí'].map(v => `<label class="pildora"><input type="radio" name="${name}" value="${v}" required><span>${v}</span></label>`).join('')}</div>${extra}</fieldset>`;
+function vInscripcion() {
+  if (S.ficha) return vFichaEnviada();
+  const a = ajustes();
+  const abiertas = a.inscripcionesAbiertas !== false;
+  const c = store.get('club-contacto-ficha', {}) || {};
+  const grupos = gruposRecreativos();
+  const hoy = hoyRef();
+  const sec = (n, titulo, cuerpo, extra = '') => `<section class="ficha-sec${extra}" aria-labelledby="fs-${n}"><h2 class="ficha-sec-t" id="fs-${n}"><span class="ficha-n">${n}</span>${titulo}</h2>${cuerpo}</section>`;
+  const v = k => esc(c[k] || '');
+  return `<div class="view ficha">
+    ${cabecera('Inscripciones', 'Ficha de primera visita · Entrenamiento recreativo infantil')}
+    <section class="ficha-intro" aria-label="Cómo funciona">
+      <span class="ficha-intro-ico">${ICON.userPlus}</span>
+      <div><p class="ficha-intro-t">¿Primera vez en el club?</p>
+      <p>Rellénala antes de la clase de prueba: nos llega al momento y te escribimos para confirmar el día.</p>
+      ${abiertas ? '' : '<p class="ficha-cerrado">Ahora mismo las inscripciones están cerradas, pero puedes enviar la ficha y te avisaremos en cuanto haya plaza.</p>'}</div>
+      <ol class="ficha-pasos"><li><b>1</b>Rellena la ficha</li><li><b>2</b>Te confirmamos el día</li><li><b>3</b>¡A entrenar!</li></ol>
+    </section>
+    <form class="form ficha-form" id="f-ins" novalidate>
+      ${sec(1, 'Datos del niño / niña', `
+        <div class="field"><label for="i-nino">Nombre y apellidos</label><input class="input" id="i-nino" name="nino" maxlength="80" autocomplete="off" required></div>
+        <div class="ficha-2">
+          <div class="field"><label for="i-nac">Fecha de nacimiento</label><input class="input" id="i-nac" name="nacimiento" type="date" max="${hoy}" required><span class="edad-chip" id="i-edad" hidden></span></div>
+          <div class="field"><label for="i-visita">Primera visita <span class="opt">(si ya tenéis día)</span></label><input class="input" id="i-visita" name="primeraVisita" type="date" min="${hoy}"></div>
+        </div>
+        ${grupos.length ? `<fieldset class="ficha-q"><legend class="label">Grupo / edad</legend><div class="pildoras" role="radiogroup">${grupos.concat(['No lo sé']).map(g => `<label class="pildora"><input type="radio" name="grupo" value="${esc(g)}"><span>${esc(g)}</span></label>`).join('')}</div><span class="hint" id="i-grupo-hint">Al poner la fecha de nacimiento te marcamos el grupo que le corresponde.</span></fieldset>`
+          : `<div class="field"><label for="i-grupo">Grupo / edad <span class="opt">(opcional)</span></label><input class="input" id="i-grupo" name="grupo" maxlength="60"></div>`}
+        ${siNo('deportePrevio', '¿Ha practicado anteriormente algún deporte?', `<div class="revela field"><label for="i-dep">¿Cuál?</label><input class="input" id="i-dep" name="deporteCual" maxlength="120" placeholder="Gimnasia, baile, natación…"></div>`)}`)}
+      ${sec(2, 'Datos del padre / madre / tutor', `
+        <div class="field"><label for="i-tutor">Nombre y apellidos</label><input class="input" id="i-tutor" name="tutor" maxlength="80" autocomplete="name" required value="${v('tutor')}"></div>
+        <fieldset class="ficha-q"><legend class="label">Relación con el menor</legend><div class="pildoras" role="radiogroup">${['Padre', 'Madre', 'Tutor/a'].map(r => `<label class="pildora"><input type="radio" name="relacion" value="${r}" required${c.relacion === r ? ' checked' : ''}><span>${r}</span></label>`).join('')}</div></fieldset>
+        <div class="ficha-2">
+          <div class="field"><label for="i-tel">Teléfono</label><input class="input" id="i-tel" name="telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" required value="${v('telefono')}"></div>
+          <div class="field"><label for="i-email">Email</label><input class="input" id="i-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" required value="${v('email')}"><span class="hint">Te llegará una copia de la ficha.</span></div>
+        </div>`)}
+      ${sec(3, 'Información importante para el entrenamiento', `
+        ${siNo('fisica', '¿Existe alguna circunstancia física que debamos conocer?', `<div class="revela field"><label for="i-fis">¿Cuál?</label><textarea class="input" id="i-fis" name="fisicaCual" maxlength="400" placeholder="Cuéntanos qué debemos tener en cuenta"></textarea></div>`)}
+        ${siNo('alergia', '¿Tiene alguna alergia o intolerancia?', `<div class="revela field"><label for="i-ale">¿Cuál?</label><input class="input" id="i-ale" name="alergiaCual" maxlength="200" placeholder="Alimento, medicamento, material…"></div>`)}
+        <div class="field"><label for="i-otra">Otra información importante para el entrenador <span class="opt">(opcional)</span></label><textarea class="input" id="i-otra" name="otra" maxlength="800"></textarea></div>
+        <div class="ficha-emerg"><p class="label">${ICON.phone}Contacto en caso de emergencia</p>
+          <div class="ficha-2">
+            <div class="field"><label for="i-en">Nombre</label><input class="input" id="i-en" name="emergNombre" maxlength="80" value="${v('emergNombre')}"></div>
+            <div class="field"><label for="i-et">Teléfono</label><input class="input" id="i-et" name="emergTel" type="tel" inputmode="tel" maxlength="20" value="${v('emergTel')}"></div>
+          </div></div>`)}
+      ${sec(4, 'Autorizaciones', `
+        <label class="check"><input type="checkbox" name="participar" required><span><b>Autorizo</b> a mi hijo/a a participar en las actividades de entrenamiento recreativo del club.</span></label>
+        <label class="check"><input type="checkbox" name="confirmo" required><span><b>Confirmo</b> que la información facilitada es correcta y me comprometo a comunicar cualquier cambio relevante.</span></label>
+        <fieldset class="ficha-q"><legend class="label ficha-leg"><b>Fotografías y vídeos.</b> ¿Autorizas al club a realizar y utilizar fotografías o vídeos del menor tomados durante las actividades, para la comunicación y promoción del club?</legend>
+          <div class="pildoras" role="radiogroup"><label class="pildora"><input type="radio" name="imagenes" value="Sí" required><span>Sí, autorizo</span></label><label class="pildora"><input type="radio" name="imagenes" value="No"><span>No autorizo</span></label></div></fieldset>`)}
+      ${sec(5, 'Firma del padre / madre / tutor', `
+        <div class="ficha-2">
+          <div class="field"><label for="i-firmante">Nombre</label><input class="input" id="i-firmante" name="firmante" maxlength="80" required value="${v('tutor')}"></div>
+          <div class="field"><span class="label">Fecha</span><p class="ficha-fecha">${ICON.cal}${cap(fechaLarga(hoy))} de ${hoy.slice(0, 4)}</p></div>
+        </div>
+        <div class="field"><span class="label" id="i-firma-l">Firma</span>
+          <div class="firma-caja" id="i-firma-caja"><canvas class="firma-lienzo" id="i-firma" aria-labelledby="i-firma-l" role="img"></canvas>
+            <p class="firma-guia" aria-hidden="true">${ICON.firma}Firma aquí con el dedo o el ratón</p>
+            <button class="firma-borrar" type="button" data-act="firma-borrar" hidden>${ICON.refresh}<span>Borrar</span></button></div></div>
+        <div class="hp" aria-hidden="true"><label for="i-web">No rellenar</label><input id="i-web" name="web" tabindex="-1" autocomplete="off"></div>
+        <label class="check"><input type="checkbox" name="consentimiento" required><span>He leído que la información de esta ficha se usará <b>solo</b> para la gestión de la actividad deportiva y la comunicación con las familias, conforme a la normativa de protección de datos.</span></label>
+        <label class="check"><input type="checkbox" name="recordar" checked><span>Recordar los datos de contacto en este dispositivo</span></label>`)}
+      <p class="err" id="i-err" role="alert" hidden></p>
+      <button class="btn btn-primary btn-block btn-cta ficha-enviar" type="submit">${ICON.check}<span>Enviar ficha al club</span></button>
+    </form>
+  </div>`;
+}
+function vFichaEnviada() {
+  const f = S.ficha;
+  const msg = [`Hola, acabo de enviar desde la app la ficha de primera visita de ${f.nino} (${f.id}).`, f.primeraVisita ? `Nos gustaría venir el ${fechaLarga(f.primeraVisita)}.` : '¿Qué día podemos venir a la primera clase?'].join('\n');
+  return `<div class="view ficha"><div class="done ficha-done">
+    <div class="done-mark">${ICON.check}</div>
+    <h1 class="h2" tabindex="-1" id="ficha-ok">¡Ficha enviada!</h1>
+    <p class="done-text">El club ya tiene la ficha de <b>${esc(f.nino)}</b>.<br>Os escribiremos para confirmar el día de la primera visita.</p>
+    <p class="meta">Referencia <span class="ref">${esc(f.id)}</span>.${f.confirmacion ? ` Os hemos enviado una copia a <b>${esc(f.email)}</b>.` : ''}</p>
+    ${CONFIG.WHATSAPP_CLUB ? `<a class="btn btn-primary btn-block btn-wa" href="${waUrl(CONFIG.WHATSAPP_CLUB, msg)}" target="_blank" rel="noopener">${ICON.chat}<span>Escribir al club por WhatsApp</span></a>` : ''}
+    <button class="btn btn-ghost btn-block" type="button" data-act="ir" data-ruta="horarios">${ICON.clock}<span>Ver los horarios</span></button>
+    <button class="btn btn-ghost btn-block" type="button" data-act="ficha-otra">${ICON.userPlus}<span>Rellenar otra ficha (hermanos)</span></button>
+  </div></div>`;
+}
+
+/* firma: un lienzo donde se dibuja con el dedo, el lápiz o el ratón */
+const Firma = { trazos: 0, lienzo: null };
+function montarFicha(borrador) {
+  const cv = $('#i-firma');
+  if (!cv) return;
+  const caja = $('#i-firma-caja');
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const ancho = caja.clientWidth || 320, alto = 170;
+  cv.width = Math.round(ancho * dpr); cv.height = Math.round(alto * dpr);
+  cv.style.height = alto + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#14110A'; ctx.lineWidth = 2.4;
+  Firma.trazos = 0; Firma.lienzo = cv;
+  let dib = false, ult = null;
+  const pos = ev => { const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
+  cv.addEventListener('pointerdown', ev => { ev.preventDefault(); dib = true; ult = pos(ev); try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* nada */ } ctx.beginPath(); ctx.arc(ult.x, ult.y, 1.1, 0, Math.PI * 2); ctx.fillStyle = '#14110A'; ctx.fill(); });
+  cv.addEventListener('pointermove', ev => {
+    if (!dib) return;
+    const p = pos(ev);
+    ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    ult = p;
+  });
+  const fin = () => { if (!dib) return; dib = false; Firma.trazos++; caja.classList.add('firmada'); $('.firma-borrar', caja).hidden = false; };
+  cv.addEventListener('pointerup', fin); cv.addEventListener('pointercancel', fin); cv.addEventListener('pointerleave', fin);
+  // si la vista se volvió a pintar mientras se rellenaba, se recupera lo escrito
+  if (borrador) {
+    const f = $('#f-ins');
+    Object.entries(borrador.campos).forEach(([k, val]) => {
+      const n = f.elements[k]; if (!n) return;
+      if (n instanceof RadioNodeList || (n.length && !n.tagName)) [...n].forEach(r => { r.checked = r.value === val; });
+      else if (n.type === 'checkbox') n.checked = val === true;
+      else n.value = val;
+    });
+    if (borrador.firma) { const img = new Image(); img.onload = () => { ctx.drawImage(img, 0, 0, ancho, alto); }; img.src = borrador.firma; Firma.trazos = 1; caja.classList.add('firmada'); $('.firma-borrar', caja).hidden = false; }
+    actualizarEdad();
+  }
+}
+function guardarBorradorFicha() {
+  const f = $('#f-ins');
+  if (!f) return null;
+  const campos = {};
+  [...f.elements].forEach(n => {
+    if (!n.name || n.name === 'web') return;
+    if (n.type === 'radio') { if (n.checked) campos[n.name] = n.value; }
+    else if (n.type === 'checkbox') campos[n.name] = n.checked;
+    else campos[n.name] = n.value;
+  });
+  return { campos, firma: Firma.trazos && Firma.lienzo ? Firma.lienzo.toDataURL('image/png') : '' };
+}
+function borrarFirma() {
+  const cv = Firma.lienzo; if (!cv) return;
+  cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  Firma.trazos = 0;
+  const caja = $('#i-firma-caja'); caja.classList.remove('firmada'); $('.firma-borrar', caja).hidden = true;
+}
+function actualizarEdad() {
+  const f = $('#f-ins'); if (!f) return;
+  const edad = edadDe(f.elements.nacimiento.value);
+  const chip = $('#i-edad');
+  chip.hidden = edad == null;
+  if (edad != null) chip.textContent = edad === 1 ? '1 año' : `${edad} años`;
+  return edad;
+}
+function cambioFicha(t) {
+  if (t.name === 'nacimiento') {
+    const edad = actualizarEdad();
+    const g = grupoPorEdad(edad);
+    const f = $('#f-ins');
+    const radios = f.querySelectorAll('input[name="grupo"]');
+    if (g && radios.length && ![...radios].some(r => r.checked && r.value !== 'No lo sé')) radios.forEach(r => { r.checked = r.value === g; });
+    const hint = $('#i-grupo-hint');
+    if (hint && edad != null) hint.textContent = g ? `Por su edad le corresponde el grupo de ${g}. Puedes cambiarlo si no es así.` : 'Elige el grupo o marca «No lo sé»: el entrenador os lo dirá.';
+  }
+  if (t.name === 'tutor') { const fi = $('#i-firmante'); if (fi && (!fi.value || fi.dataset.auto !== 'no')) fi.value = t.value; }
+  if (t.name === 'firmante') t.dataset.auto = 'no';
+}
+function leerFicha(form) {
+  const el = form.elements;
+  const v = n => (el[n] ? String(el[n].value || '').trim() : '');
+  const radio = n => { const r = form.querySelector(`input[name="${n}"]:checked`); return r ? r.value : ''; };
+  const d = {
+    nino: v('nino'), nacimiento: v('nacimiento'), primeraVisita: v('primeraVisita'), grupo: el.grupo && el.grupo.tagName === 'INPUT' && el.grupo.type !== 'radio' ? v('grupo') : radio('grupo'),
+    deportePrevio: radio('deportePrevio'), deporteCual: v('deporteCual'),
+    tutor: v('tutor'), relacion: radio('relacion'), telefono: v('telefono'), email: v('email'),
+    fisica: radio('fisica'), fisicaCual: v('fisicaCual'), alergia: radio('alergia'), alergiaCual: v('alergiaCual'), otra: v('otra'),
+    emergNombre: v('emergNombre'), emergTel: v('emergTel'),
+    participar: el.participar.checked, confirmo: el.confirmo.checked, imagenes: radio('imagenes'), consentimiento: el.consentimiento.checked,
+    firmante: v('firmante') || v('tutor'), web: v('web'),
+  };
+  if (d.grupo === 'No lo sé') d.grupo = '';
+  const err = (error, campo) => ({ error, campo });
+  if (d.nino.length < 2) return err('Escribe el nombre y apellidos del niño o la niña.', 'nino');
+  const edad = edadDe(d.nacimiento);
+  if (edad == null || edad > 18) return err('Revisa la fecha de nacimiento.', 'nacimiento');
+  if (d.primeraVisita && d.primeraVisita < hoyRef()) return err('El día de la primera visita no puede ser anterior a hoy.', 'primeraVisita');
+  if (!d.deportePrevio) return err('Indica si ha practicado algún deporte antes.', 'deportePrevio');
+  if (d.deportePrevio === 'Sí' && d.deporteCual.length < 2) return err('Indica qué deporte ha practicado.', 'deporteCual');
+  if (d.tutor.length < 2) return err('Escribe el nombre y apellidos del padre, la madre o el tutor.', 'tutor');
+  if (!d.relacion) return err('Indica la relación con el menor: padre, madre o tutor/a.', 'relacion');
+  const dg = soloDigitos(d.telefono);
+  if (dg.length < 9 || dg.length > 15) return err('Escribe un teléfono válido: 9 cifras, o con prefijo si no es de España.', 'telefono');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return err('Escribe un email válido: ahí os llegará la copia de la ficha.', 'email');
+  if (!d.fisica) return err('Indica si hay alguna circunstancia física que debamos conocer.', 'fisica');
+  if (d.fisica === 'Sí' && d.fisicaCual.length < 2) return err('Cuéntanos qué circunstancia física debemos conocer.', 'fisicaCual');
+  if (!d.alergia) return err('Indica si tiene alguna alergia o intolerancia.', 'alergia');
+  if (d.alergia === 'Sí' && d.alergiaCual.length < 2) return err('Indica la alergia o intolerancia.', 'alergiaCual');
+  if (d.emergTel && soloDigitos(d.emergTel).length < 9) return err('Revisa el teléfono de emergencia.', 'emergTel');
+  if (!d.participar) return err('Falta marcar la autorización para participar en los entrenamientos.', 'participar');
+  if (!d.confirmo) return err('Falta confirmar que la información es correcta.', 'confirmo');
+  if (!d.imagenes) return err('Indica si autorizas o no el uso de fotografías y vídeos.', 'imagenes');
+  if (d.firmante.length < 2) return err('Escribe el nombre de quien firma.', 'firmante');
+  if (!Firma.trazos) return err('Falta la firma: fírmala con el dedo o el ratón en el recuadro.', 'firma');
+  if (!d.consentimiento) return err('Marca la casilla de protección de datos para enviar la ficha.', 'consentimiento');
+  d.firma = firmaRecortada();
+  return d;
+}
+/* la firma, recortada a lo dibujado y sobre fondo blanco (así pesa poco y se ve bien en el email y el PDF) */
+function firmaRecortada() {
+  const cv = Firma.lienzo, w = cv.width, h = cv.height;
+  const px = cv.getContext('2d').getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (px[(y * w + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 <= x0 || y1 <= y0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+  const m = 16, sx = Math.max(0, x0 - m), sy = Math.max(0, y0 - m), sw = Math.min(w, x1 + m) - sx, sh = Math.min(h, y1 + m) - sy;
+  const k = Math.min(1, 600 / sw);
+  const out = document.createElement('canvas');
+  out.width = Math.round(sw * k); out.height = Math.round(sh * k);
+  const c = out.getContext('2d');
+  c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, out.width, out.height);
+  c.drawImage(cv, sx, sy, sw, sh, 0, 0, out.width, out.height);
+  return out.toDataURL('image/png');
+}
+async function enviarFicha(form) {
+  const d = leerFicha(form);
+  const errBox = $('#i-err');
+  form.querySelectorAll('[aria-invalid]').forEach(n => n.removeAttribute('aria-invalid'));
+  if (d.error) {
+    errBox.textContent = d.error; errBox.hidden = false;
+    const n = d.campo === 'firma' ? $('#i-firma-caja') : form.elements[d.campo];
+    const nodo = n && (n.tagName ? n : n[0]);
+    if (nodo) { if (nodo.setAttribute) nodo.setAttribute('aria-invalid', 'true'); try { nodo.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* nada */ } if (nodo.focus) nodo.focus({ preventScroll: true }); }
+    return;
+  }
+  errBox.hidden = true;
+  const btn = form.querySelector('[type="submit"]');
+  btn.disabled = true; const txt = btn.innerHTML; btn.innerHTML = '<span>Enviando la ficha…</span>';
+  const res = await API.inscribir(d);
+  if (!res.ok) { btn.disabled = false; btn.innerHTML = txt; errBox.textContent = res.error || 'No se ha podido enviar la ficha. Inténtalo de nuevo.'; errBox.hidden = false; return; }
+  if (form.elements.recordar.checked) store.set('club-contacto-ficha', { tutor: d.tutor, relacion: d.relacion, telefono: d.telefono, email: d.email, emergNombre: d.emergNombre, emergTel: d.emergTel });
+  else store.del('club-contacto-ficha');
+  S.fichaBorrador = null;
+  S.ficha = { id: res.data.id, nino: d.nino, email: d.email, primeraVisita: d.primeraVisita, confirmacion: !!res.data.confirmacion };
+  renderView();
+  window.scrollTo(0, 0);
+  const t = $('#ficha-ok'); if (t) t.focus();
+}
+
+/* =================================================================
    INICIO
    ================================================================= */
 const textoInicio = s => (s && /^\s*\[/.test(s) ? `<span class="ph">${esc(s)}</span>` : linkify(s || ''));
@@ -2556,7 +2919,8 @@ function lema(ini) {
 }
 function carrusel(fotos, byn) {
   let items;
-  if (fotos && fotos.length) items = fotos.map(f => `<figure class="car-item"><img src="${esc(f.src)}" alt="${esc(f.alt || '')}" loading="lazy"></figure>`);
+  // las fotos apaisadas (grupos) se ven más anchas, con la misma altura que las demás
+  if (fotos && fotos.length) items = fotos.map(f => `<figure class="car-item"><img src="${esc(f.src)}" alt="${esc(f.alt || '')}" loading="lazy" onload="if(this.naturalWidth>this.naturalHeight*1.2)this.parentNode.classList.add('ancha')"></figure>`);
   else if (DEMO) items = Array.from({ length: 8 }, (_, i) => `<div class="car-item car-ph${i % 2 ? ' alt' : ''}">${ICON.camera}<span>Foto del club</span></div>`);
   else return '';
   while (items.length < 6) items = items.concat(items);
@@ -2582,7 +2946,7 @@ function vInicio() {
         <button class="link-mas" type="button" data-act="ir" data-ruta="historia"><span>Conocer nuestra historia</span>${ICON.arrow}</button></div></section>` : '';
   const bloques = [];
   if (ins.texto) {
-    const wa = CONFIG.WHATSAPP_CLUB ? `<a class="btn btn-ghost btn-sm" href="${waUrl(CONFIG.WHATSAPP_CLUB, 'Hola, quería información sobre las inscripciones.')}" target="_blank" rel="noopener">${ICON.chat}<span>Pedir información</span></a>` : '';
+    const wa = `<button class="btn btn-primary btn-sm" type="button" data-act="ir" data-ruta="inscripcion">${ICON.userPlus}<span>Primera visita</span></button>`;
     bloques.push(`<section class="home-block" aria-labelledby="h-ins"><div class="block-head"><h2 class="h2" id="h-ins">${esc(ins.titulo || 'Inscripciones')}</h2><span class="status ${abiertas ? 's-abiertas' : 's-cancelado'}">${abiertas ? 'Abiertas' : 'Cerradas'}</span></div>
       <p>${textoInicio(ins.texto)}</p>
       <div class="actions">${wa}<button class="btn btn-ghost btn-sm" type="button" data-act="ir" data-ruta="horarios">Ver grupos y horarios</button></div></section>`);
@@ -3876,6 +4240,8 @@ const ACT = {
   'reintentar-slots': () => { delete S.slots[S.mes]; renderView(); },
   'reintentar-init': () => { S.initError = ''; renderView(); cargarInit(); },
   'cerrar-hoja': () => sheet.close(),
+  'firma-borrar': () => borrarFirma(),
+  'ficha-otra': () => { S.ficha = null; renderView(); window.scrollTo(0, 0); },
   'producto': t => abrirProducto(t.dataset.id),
   'ver-prenda': t => { if (t.dataset.cat) S.ropaCat = t.dataset.cat; ir('ropa'); abrirProducto(t.dataset.id); },
   'ver-equipacion': t => { if (t.dataset.cat) S.ropaCat = t.dataset.cat; ir('ropa'); },
@@ -3962,9 +4328,11 @@ function onSubmit(e) {
   if (f.id === 'f-reserva') enviarReserva(f);
   else if (f.id === 'f-pedido') enviarPedido(f);
   else if (f.id === 'f-login') login(f);
+  else if (f.id === 'f-ins') enviarFicha(f);
 }
 async function onChange(e) {
   const t = e.target;
+  if (t.closest && t.closest('#f-ins')) { cambioFicha(t); return; }
   if (t.dataset.change === 'estado') {
     const id = t.dataset.id, estado = t.value;
     t.disabled = true;
@@ -4044,7 +4412,7 @@ function arrancar() {
         const v = r.ok ? (await r.json()).version : '';
         if (!v || v === VERSION_APP) return;
         if (navigator.serviceWorker) { const reg = await navigator.serviceWorker.getRegistration(); if (reg) reg.update().catch(() => {}); }
-        const recargar = () => { if (!sheet.isOpen() && !document.querySelector('.visor') && !document.querySelector('form :focus')) location.reload(); else setTimeout(recargar, 5000); };
+        const recargar = () => { if (!sheet.isOpen() && !document.querySelector('.visor') && !document.querySelector('form :focus') && !document.getElementById('f-ins') && !S.fichaBorrador) location.reload(); else setTimeout(recargar, 5000); };
         recargar();
       } catch (e) { /* sin conexión: ya se mirará la próxima vez */ }
     };
