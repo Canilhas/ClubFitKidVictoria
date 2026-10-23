@@ -2029,7 +2029,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = 'c090979ba423';   // la pone build.py en cada versión
+const VERSION_APP = 'a3b2eed9d5f2';   // la pone build.py en cada versión
 /* Lista real de deportistas: solo la recibe la vista previa privada al compilar (nunca la versión pública de GitHub) */
 const DEPORTISTAS_CLUB = null;
 const DEMO = !CONFIG.API_URL;
@@ -2487,7 +2487,7 @@ const S = {
   horGrupo: null,
   fichaBorrador: null,
   ficha: null,          // ficha de primera visita ya enviada (pantalla de gracias)
-  dep: { lista: null, cargando: false, error: '', q: '', nivel: 'todos', anio: 'todos', orden: 'nivel', editar: null, borrar: false },
+  dep: { lista: null, cargando: false, error: '', q: '', nivel: 'todos', anio: 'todos', orden: 'edad', editar: null, borrar: false },
   admin: { pass: null, tab: 'reservas', data: null, cargando: false, error: '', filtroR: 'proximas', filtroT: 'todas', filtroP: 'todos', q: '', confirmar: null },
 };
 const RUTAS = ['inicio', 'historia', 'inscripcion', 'reservas', 'ropa', 'horarios', 'temporada', 'calendario', 'admin'];
@@ -4023,6 +4023,9 @@ function filasDeportistas() {
   let out = '', grupo = null;
   l.forEach(x => {
     if (S.dep.orden === 'nivel' && x.nivel !== grupo) { grupo = x.nivel; out += `<h2 class="group-h">${esc(grupo || 'Sin nivel')} <span class="count">${l.filter(y => y.nivel === grupo).length}</span></h2>`; }
+    // por edad: un título por año de nacimiento («2016 · 10 años»)
+    const gAnio = anioTxt(x);
+    if (S.dep.orden.startsWith('edad') && gAnio !== grupo) { grupo = gAnio; out += `<h2 class="group-h">${esc(gAnio)}${edadTxt(x) ? ` · ${esc(edadTxt(x))} años` : ''} <span class="count">${l.filter(y => anioTxt(y) === gAnio).length}</span></h2>`; }
     out += `<button class="dep" type="button" data-act="dep-editar" data-id="${esc(x.id)}">
       <span class="dep-av" aria-hidden="true">${esc(iniciales(x.nombre))}</span>
       <span class="dep-main"><b class="dep-n">${esc(x.nombre)}</b><span class="dep-meta">${esc(anioTxt(x))}${edadTxt(x) ? ` · <b>${esc(edadTxt(x))} años</b>` : ''}${x.notas ? ` · ${esc(x.notas)}` : ''}</span></span>
@@ -4055,7 +4058,7 @@ function vAdminDeportistas() {
         <label class="sr-only" for="dep-anio">Año de nacimiento</label>
         <select class="input input-sm select" id="dep-anio" data-change="dep-anio"><option value="todos">Todas las edades</option>${anios.map(a => `<option value="${a}"${D.anio === String(a) ? ' selected' : ''}>${a} · ${anioActual() - a} años</option>`).join('')}</select>
         <label class="sr-only" for="dep-orden">Ordenar</label>
-        <select class="input input-sm select" id="dep-orden" data-change="dep-orden">${[['nivel', 'Por nivel'], ['nombre', 'Por nombre (A-Z)'], ['edad', 'Mayores primero'], ['edad-asc', 'Pequeñas primero']].map(([v, t]) => `<option value="${v}"${D.orden === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <select class="input input-sm select" id="dep-orden" data-change="dep-orden">${[['edad', 'Por edad (mayores primero)'], ['edad-asc', 'Por edad (pequeñas primero)'], ['nivel', 'Por nivel'], ['nombre', 'Por nombre (A-Z)']].map(([v, t]) => `<option value="${v}"${D.orden === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
       </div>
     </div>
     <p class="meta dep-cuenta" id="dep-cuenta">${deportistasFiltrados().length} en la lista</p>
@@ -4693,7 +4696,7 @@ const ACT = {
   },
   'exportar': () => sheet.open(hojaExportar()),
   'dep-refrescar': () => { S.dep.lista = null; S.dep.error = ''; renderView(); },
-  'dep-nivel': t => { S.dep.nivel = t.dataset.f; renderView(); },
+  'dep-nivel': t => { S.dep.nivel = t.dataset.f; if (S.dep.nivel === 'todos') S.dep.orden = 'edad'; renderView(); },
   'dep-nuevo': () => { sheet.open(formDeportista(null)); },
   'dep-editar': t => { const x = (S.dep.lista || []).find(z => z.id === t.dataset.id); if (x) sheet.open(formDeportista(x)); },
   'dep-borrar-pedir': () => { const b = $('#dep-borrar'); if (b) b.innerHTML = `<span class="confirm-q">¿Eliminar a esta deportista de la lista?</span><button class="btn btn-danger btn-sm" type="button" data-act="dep-borrar-si">Sí, eliminar</button><button class="btn btn-ghost btn-sm" type="button" data-act="dep-borrar-no">No</button>`; },
