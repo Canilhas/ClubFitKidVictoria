@@ -1,5 +1,5 @@
 /* Service worker: la app abre sin conexión; las reservas y pedidos siempre van por la red. */
-const VERSION = 'club-eec2c8e7ef9f';
+const VERSION = 'club-9968324977c0';
 const BASE = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -18,7 +18,8 @@ self.addEventListener('fetch', e => {
   if (url.hostname.endsWith('script.google.com') || url.hostname.endsWith('googleusercontent.com')) return;
   // La página: primero la red (así ves enseguida cada versión nueva), si no hay conexión, la copia guardada
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req)
+    // cache: 'no-cache' → el navegador pregunta siempre a GitHub si hay versión nueva (no usa su copia de 10 minutos)
+    e.respondWith(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
       .then(r => { const copia = r.clone(); caches.open(VERSION).then(c => c.put('./index.html', copia)); return r; })
       .catch(() => caches.match('./index.html')));
     return;
