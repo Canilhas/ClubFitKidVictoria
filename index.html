@@ -1975,7 +1975,7 @@ const CONFIG = {
 /* ================================================================= */
 
 const BUILD = window.__CLUB_BUILD__ === 'artifact' ? 'artifact' : 'web';
-const VERSION_APP = '9968324977c0';   // la pone build.py en cada versión
+const VERSION_APP = '1cda171df862';   // la pone build.py en cada versión
 const DEMO = !CONFIG.API_URL;
 
 /* ---------- utilidades ---------- */
@@ -4215,7 +4215,7 @@ async function pdfNuevo(titulo, sub) {
       didDrawPage: marco,
     }, opts);
     o.head = (o.head || []).map(f => f.map(pdfTxt));
-    o.body = (o.body || []).map(f => f.map(pdfTxt));
+    o.body = (o.body || []).map(f => f.map(c => (c && typeof c === 'object' ? Object.assign({}, c, { content: pdfTxt(c.content) }) : pdfTxt(c))));
     if (typeof doc.autoTable === 'function') doc.autoTable(o); else window.autoTable(doc, o);
     return doc.lastAutoTable ? doc.lastAutoTable.finalY : 40;
   };
@@ -4232,6 +4232,41 @@ async function pdfReservas(lista, sub) {
   });
   return P.fin();
 }
+/* Foto pequeña de cada prenda para el PDF (la primera foto de la ficha de la prenda), en cuadrado y con fondo claro */
+function miniatura(src) {
+  return new Promise(res => {
+    if (!src) return res('');
+    const img = new Image();
+    const t = setTimeout(() => res(''), 8000);
+    img.onload = () => {
+      clearTimeout(t);
+      try {
+        const n = 240, c = document.createElement('canvas'); c.width = n; c.height = n;
+        const x = c.getContext('2d');
+        x.fillStyle = '#F4F2F3'; x.fillRect(0, 0, n, n);
+        const k = Math.min(n / img.naturalWidth, n / img.naturalHeight) * 0.94, w = img.naturalWidth * k, h = img.naturalHeight * k;
+        x.drawImage(img, (n - w) / 2, (n - h) / 2, w, h);
+        res(c.toDataURL('image/jpeg', 0.86));
+      } catch (e) { res(''); }   // una foto de otra web que no deja copiarla: el PDF sale sin ella
+    };
+    img.onerror = () => { clearTimeout(t); res(''); };
+    if (/^https?:/i.test(src) && !src.startsWith(location.origin)) img.crossOrigin = 'anonymous';
+    img.src = src;
+  });
+}
+async function miniaturasPrendas(pedidos) {
+  const src = {};
+  pedidos.forEach(p => (p.lineas || []).forEach(l => {
+    if (src[l.nombre] !== undefined) return;
+    const pr = producto(l.id) || productos().find(x => x.nombre === l.nombre);
+    src[l.nombre] = pr ? (fotosDe(pr)[0] || '') : '';
+  }));
+  const nombres = Object.keys(src);
+  const datos = await Promise.all(nombres.map(n => miniatura(src[n])));
+  const out = {};
+  nombres.forEach((n, i) => { out[n] = datos[i]; });
+  return out;
+}
 async function pdfPedidos(lista, sub) {
   const P = await pdfNuevo('Pedidos de ropa', sub);
   const vivos = lista.filter(p => p.estado !== 'Cancelado');
@@ -4247,17 +4282,40 @@ async function pdfPedidos(lista, sub) {
   if (y > H - 40) { doc.addPage(); y = 31; }
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(20, 17, 10);
   doc.text(pdfTxt(`Total (sin cancelados): ${euros(total)}   ·   Pendiente de cobro: ${euros(pendiente)}`), 12, y + 8);
-  const resumen = filasResumen(lista);
-  if (resumen.length) {
-    if (y + 30 > H - 20) { doc.addPage(); y = 23; }
-    doc.setFontSize(12); doc.text('Resumen para el proveedor', 12, y + 18);
+  const res = resumenProveedor(lista);
+  const prendas = Object.keys(res).sort();
+  if (prendas.length) {
+    const fotos = await miniaturasPrendas(lista);
+    if (y + 40 > H - 20) { doc.addPage(); y = 23; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(20, 17, 10); doc.text('Resumen para el proveedor', 12, y + 18);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(122, 115, 101);
     doc.text('Unidades por prenda y talla, sin contar los pedidos cancelados.', 12, y + 23);
+    const LADO = 20;   // la foto de cada prenda, en mm
+    const body = [];
+    prendas.forEach(n => {
+      const tallas = Object.keys(res[n].tallas).sort((a, b) => ordenTalla(a) - ordenTalla(b));
+      const alto = Math.max(7.5, (LADO + 3) / tallas.length);   // así la fila de la prenda deja sitio a la foto
+      tallas.forEach((t, i) => {
+        const fila = [];
+        if (i === 0) {
+          fila.push({ content: '', rowSpan: tallas.length, foto: fotos[n] || '', styles: { fillColor: [255, 255, 255] } });
+          fila.push({ content: `${n}\n${res[n].total} ${res[n].total === 1 ? 'unidad' : 'unidades'} en total`, rowSpan: tallas.length, styles: { fontStyle: 'bold', valign: 'middle' } });
+        }
+        fila.push({ content: /^[uú]nica$/i.test(t) ? 'Única' : t, styles: { minCellHeight: alto, valign: 'middle' } });
+        fila.push({ content: String(res[n].tallas[t]), styles: { minCellHeight: alto, valign: 'middle', halign: 'center', fontStyle: 'bold' } });
+        body.push(fila);
+      });
+    });
     P.tabla({
-      startY: y + 26, tableWidth: 150,
-      head: [['Prenda', 'Talla', 'Unidades']],
-      body: resumen,
-      columnStyles: { 0: { cellWidth: 80, fontStyle: 'bold' }, 1: { cellWidth: 40 }, 2: { cellWidth: 30, halign: 'center' } },
+      startY: y + 26, tableWidth: 170, rowPageBreak: 'avoid',
+      head: [['Foto', 'Prenda', 'Talla', 'Unidades']],
+      body,
+      columnStyles: { 0: { cellWidth: LADO + 4 }, 1: { cellWidth: 92 }, 2: { cellWidth: 30 }, 3: { cellWidth: 24 } },
+      didDrawCell: h => {
+        if (h.section !== 'body' || h.column.index !== 0 || !h.cell.raw || !h.cell.raw.foto) return;
+        const lado = Math.min(LADO, h.cell.width - 3, h.cell.height - 3);
+        try { doc.addImage(h.cell.raw.foto, 'JPEG', h.cell.x + (h.cell.width - lado) / 2, h.cell.y + (h.cell.height - lado) / 2, lado, lado); } catch (e) { /* sin foto */ }
+      },
     });
   }
   return P.fin();
@@ -4493,7 +4551,7 @@ function arrancar() {
   // Actualización automática: al volver a la app, si en GitHub hay una versión nueva, se recarga sola
   // (sin reinstalar nada). Nunca a mitad de una reserva o un pedido.
   if (BUILD === 'web' && /^[0-9a-f]{8,}$/.test(VERSION_APP)) {
-    let ultima = Date.now();
+    let ultima = 0;
     const comprobar = async () => {
       if (document.visibilityState !== 'visible' || Date.now() - ultima < 60000) return;
       ultima = Date.now();
@@ -4501,12 +4559,21 @@ function arrancar() {
         const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
         const v = r.ok ? (await r.json()).version : '';
         if (!v || v === VERSION_APP) return;
+        // si ya se recargó para esta versión y sigue saliendo la antigua, no se insiste (evita recargas en bucle)
+        let ya = ''; try { ya = sessionStorage.getItem('club-recarga') || ''; } catch (e) { /* nada */ }
+        if (ya === v) return;
         if (navigator.serviceWorker) { const reg = await navigator.serviceWorker.getRegistration(); if (reg) reg.update().catch(() => {}); }
-        const recargar = () => { if (!sheet.isOpen() && !document.querySelector('.visor') && !document.querySelector('form :focus') && !document.getElementById('f-ins') && !S.fichaBorrador) location.reload(); else setTimeout(recargar, 5000); };
+        const recargar = () => {
+          if (sheet.isOpen() || document.querySelector('.visor') || document.querySelector('form :focus') || document.getElementById('f-ins') || S.fichaBorrador) return void setTimeout(recargar, 5000);
+          try { sessionStorage.setItem('club-recarga', v); } catch (e) { /* nada */ }
+          // dirección nueva (?v=…): así ni el navegador ni la app instalada pueden enseñar la copia guardada
+          location.replace(location.pathname + '?v=' + v + location.hash);
+        };
         recargar();
       } catch (e) { /* sin conexión: ya se mirará la próxima vez */ }
     };
     document.addEventListener('visibilitychange', comprobar);
+    setTimeout(comprobar, 2000);          // también nada más abrir la app
     setInterval(comprobar, 30 * 60000);
   }
 }
